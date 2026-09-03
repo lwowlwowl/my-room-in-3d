@@ -4,3 +4,8 @@ dist-ssr
 *.local
 .DS_Store
 .vite
+
+# heavy AI-generated 3D intermediates (regenerable; use Git LFS if needed later)
+blender/3d/
+blender/.tmp/
+*.blend1
