@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+  body {
+    font-family: 'Quicksand', system-ui, -apple-system, sans-serif;
+    background: #1f1a16;
+    color: #3a2f25;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* The 3D canvas fills the screen */
+  .canvas-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  /* Floating label that follows hovered objects */
+  .hover-label {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    transform: translate(-50%, -130%);
+    transition: opacity 0.18s ease;
+    z-index: 20;
+  }
+
+  /* Top-left title chip */
+  .title-chip {
+    position: fixed;
+    top: 1.25rem;
+    left: 1.25rem;
+    z-index: 30;
+  }
+
+  /* Bottom hint */
+  .hint-bar {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+  }
+
+  /* Back button (top-right) */
+  .back-btn {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 40;
+  }
+
+  /* Sliding content panel */
+  .content-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(440px, 92vw);
+    z-index: 35;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .content-panel.open {
+    transform: translateX(0);
+  }
+}
+
+/* Thin scrollbar for the panel */
+.content-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.content-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+}
+
+/* Hide canvas cursor while dragging */
+.grabbing {
+  cursor: grabbing !important;
+}
+.grab {
+  cursor: grab;
+}
+
+/* Loading veil — border frame draws itself, then the doors part */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #f5ead7;
+  overflow: hidden;
+}
+
+/* Doors — solid halves of the veil, split at center. Slight overlap (50.5%
+   each) hides any seam; identical vertical gradients keep the join invisible. */
+.loader-door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50.5%;
+  background: linear-gradient(180deg, #2b231b 0%, #241d16 60%);
+  will-change: transform;
+}
+
+.loader-door-r {
+  left: auto;
+  right: 0;
+}
+
+/* Film grain — SVG feTurbulence tiled as a data URI, no GPU cost */
+.loader-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* Frame strokes — non-scaling so the border reads crisp at any viewport */
+.loader-frame-faint {
+  stroke: rgba(245, 234, 215, 0.12);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.loader-frame-draw {
+  stroke: #e8b86d;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
