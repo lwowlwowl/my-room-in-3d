@@ -16,11 +16,17 @@ export const useStore = create((set) => ({
   // whether the loader veil has started opening (gates the furniture intro —
   // kept separate from `ready` so the intro plays when SEEN, not behind the veil)
   revealed: false,
+  // day / night mode (toggled by the desk lamp easter egg or the top-right button)
+  night: false,
+  // which signpost board is open: 'work' | 'about' | 'contact' | null
+  board: null,
 
   setActive: (id) => set({ active: id }),
   setHovered: (id) => set({ hovered: id }),
   setReady: (ready) => set({ ready }),
   setRevealed: (revealed) => set({ revealed }),
+  setNight: (night) => set({ night }),
+  setBoard: (board) => set({ board }),
 }))
 
 export const selectActive = (s) => s.active

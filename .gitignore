@@ -6,6 +6,11 @@ dist-ssr
 .vite
 
 # heavy AI-generated 3D intermediates (regenerable; use Git LFS if needed later)
-blender/3d/
+# — only the two 100MB+ scene bundles are excluded; the rest of 3d/ uploads
+blender/3d/cottagecore-scene-final.glb
+blender/3d/cottagecore-scene-night.glb
 blender/.tmp/
+
+# Blender project sources — kept local / cloud backup, too big for GitHub
+*.blend
 *.blend1

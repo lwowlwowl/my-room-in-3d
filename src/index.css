@@ -151,3 +151,255 @@
   vector-effect: non-scaling-stroke;
   stroke-linecap: round;
 }
+
+/* ============================================================================
+   FOREST MODAL — wooden sign hanging on ropes, carved title plank, cream
+   paper sheet. Shared by all three signpost boards (work / about / contact).
+   ============================================================================ */
+
+/* dimmed backdrop over the 3D scene */
+.forest-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(38, 46, 30, 0.45) 0%, rgba(20, 26, 16, 0.72) 100%);
+  backdrop-filter: blur(6px);
+  animation: forest-veil-in 0.35s ease both;
+}
+@keyframes forest-veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* two ropes dropping from the top of the screen to the sign */
+.forest-ropes {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: min(28vw, 300px);
+  pointer-events: none;
+}
+.forest-ropes span {
+  display: block;
+  width: 5px;
+  height: max(6vh, 40px);
+  background: linear-gradient(90deg, #8a6240 0%, #a87f52 45%, #6d4c30 100%);
+  border-radius: 3px;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+/* the wooden sign itself */
+.forest-sign {
+  position: relative;
+  width: min(560px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+  border-radius: 26px;
+  padding: 26px 28px 30px;
+  transform: rotate(-1.1deg);
+  animation: forest-swing 0.7s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+  /* wood grain: layered gradients */
+  background:
+    repeating-linear-gradient(94deg, rgba(70, 45, 25, 0.07) 0 3px, transparent 3px 14px),
+    repeating-linear-gradient(2deg, rgba(255, 230, 190, 0.05) 0 2px, transparent 2px 22px),
+    linear-gradient(165deg, #b98d5e 0%, #a97c4e 45%, #96683c 100%);
+  border: 6px solid #6d4c30;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 235, 200, 0.25),
+    inset 0 -4px 0 rgba(60, 38, 20, 0.35),
+    0 24px 60px rgba(0, 0, 0, 0.5);
+}
+@keyframes forest-swing {
+  0% { transform: rotate(-4deg) translateY(-46px); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: rotate(-1.1deg) translateY(0); opacity: 1; }
+}
+
+/* nails in the four corners */
+.nail {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d8cdb8 0%, #8d8171 55%, #4d4438 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+.nail-tl { top: 10px; left: 10px; }
+.nail-tr { top: 10px; right: 10px; }
+.nail-bl { bottom: 10px; left: 10px; }
+.nail-br { bottom: 10px; right: 10px; }
+
+/* round wooden close button */
+.forest-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid #6d4c30;
+  background: radial-gradient(circle at 35% 30%, #c59a6a 0%, #a97c4e 60%, #8a6240 100%);
+  color: #3c2a18;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.18s ease;
+}
+.forest-close:hover { transform: scale(1.1) rotate(6deg); }
+.forest-close:active { transform: scale(0.94); }
+
+/* carved title plank */
+.forest-title-plank {
+  margin: 2px auto 18px;
+  width: fit-content;
+  max-width: 90%;
+  text-align: center;
+  padding: 10px 34px 12px;
+  border-radius: 14px;
+  transform: rotate(0.8deg);
+  background: linear-gradient(180deg, #8a6240 0%, #77522f 100%);
+  border: 3px solid #5c3f24;
+  box-shadow: inset 0 2px 3px rgba(255, 230, 190, 0.18), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+.forest-title-carve {
+  display: block;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: clamp(24px, 4vw, 34px);
+  line-height: 1.05;
+  color: #f0e2c4;
+  text-shadow: 0 2px 0 rgba(40, 24, 10, 0.8), 0 -1px 0 rgba(255, 240, 210, 0.25);
+  letter-spacing: 0.03em;
+}
+.forest-title-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 14px;
+  color: #d9c49a;
+  letter-spacing: 0.12em;
+}
+
+/* cream paper sheet pinned on the wood */
+.forest-paper {
+  position: relative;
+  border-radius: 14px;
+  padding: 20px 22px;
+  transform: rotate(0.5deg);
+  background:
+    repeating-linear-gradient(0deg, rgba(150, 130, 90, 0.05) 0 1px, transparent 1px 26px),
+    linear-gradient(178deg, #f7efdc 0%, #efe3c8 100%);
+  border: 2px solid rgba(109, 76, 48, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  color: #3a2f25;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* corner leaves on the paper */
+.forest-leaf {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  color: #71975b;
+  opacity: 0.8;
+}
+.forest-leaf-tl { top: 8px; left: 8px; transform: rotate(-24deg); }
+.forest-leaf-br { bottom: 8px; right: 8px; transform: rotate(148deg); }
+
+/* vine along the bottom of the sign */
+.forest-vine {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.forest-intro { margin: 0 0 12px; color: #55432e; }
+.forest-intro-center { text-align: center; font-size: 19px; }
+
+/* ——— My Work ——— */
+.forest-projects { display: flex; flex-direction: column; gap: 10px; }
+.forest-project {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(178, 141, 94, 0.16);
+  border: 1.5px solid rgba(109, 76, 48, 0.35);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.forest-project:hover {
+  transform: translateX(4px) rotate(-0.4deg);
+  background: rgba(140, 175, 110, 0.22);
+}
+.forest-project-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.forest-project-name { font-weight: 700; font-size: 18px; color: #3a2f25; }
+.forest-tag {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #71975b;
+  color: #f4eedb;
+  letter-spacing: 0.04em;
+}
+.forest-project-desc { margin: 4px 0 6px; font-size: 15.5px; color: #5c4a33; }
+.forest-project-link { font-size: 14px; color: #4c6b3c; font-weight: 700; letter-spacing: 0.03em; }
+
+/* ——— About ——— */
+.forest-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.forest-meta-card {
+  flex: 1 1 130px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(113, 151, 91, 0.16);
+  border: 1.5px solid rgba(76, 107, 60, 0.4);
+}
+.forest-meta-leaf { width: 20px; height: 20px; color: #4c6b3c; flex-shrink: 0; }
+.forest-meta-k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7a6547; }
+.forest-meta-v { font-size: 16.5px; font-weight: 700; color: #3a2f25; }
+
+/* ——— Contact ——— */
+.forest-links { display: flex; justify-content: center; gap: 22px; margin-top: 14px; flex-wrap: wrap; }
+.forest-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: #4c6b3c;
+  transition: transform 0.18s ease;
+}
+.forest-link:hover { transform: translateY(-4px) rotate(-2deg); }
+.forest-link-icon {
+  width: 52px;
+  height: 52px;
+  padding: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(178, 141, 94, 0.35) 0%, rgba(113, 151, 91, 0.28) 100%);
+  border: 2.5px solid #71975b;
+  color: #4c6b3c;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+.forest-link-label { font-size: 14px; font-weight: 700; color: #55432e; letter-spacing: 0.05em; }
+
+/* thin wooden scrollbar */
+.forest-sign::-webkit-scrollbar { width: 6px; }
+.forest-sign::-webkit-scrollbar-thumb { background: rgba(60, 38, 20, 0.4); border-radius: 3px; }

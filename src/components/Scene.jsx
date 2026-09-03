@@ -7,14 +7,7 @@ import { gsap } from 'gsap'
 import * as THREE from 'three'
 import { useStore } from '../store'
 import { focusSpots, defaultCamera } from '../content'
-import { Room } from './Room'
-import { Bed } from './objects/Bed'
-import { Desk } from './objects/Desk'
-import { Computer } from './objects/Computer'
-import { Wardrobe } from './objects/Wardrobe'
-import { Window } from './objects/Window'
-import { MedicineCabinet } from './objects/MedicineCabinet'
-import { DeskTrinket } from './objects/DeskTrinket'
+import { CottageShell, CottageFurniture } from './Cottage'
 
 export function Scene() {
   const controlsRef = useRef()
@@ -24,6 +17,7 @@ export function Scene() {
   const { camera, gl } = useThree()
   const active = useStore((s) => s.active)
   const revealed = useStore((s) => s.revealed)
+  const night = useStore((s) => s.night)
   const setReady = useStore((s) => s.setReady)
 
   // Enable physically-correct lighting + ACES tone mapping for a cinematic look.
@@ -97,89 +91,114 @@ export function Scene() {
 
   return (
     <>
-      <color attach="background" args={['#241d16']} />
-      <fog attach="fog" args={['#241d16', 16, 32]} />
+      <color attach="background" args={[night ? '#0b1122' : '#241d16']} />
+      <fog attach="fog" args={[night ? '#0b1122' : '#241d16', 16, 40]} />
 
       {/* Soft shadow kernel — blurs shadow edges for a natural look */}
       <SoftShadows size={28} samples={16} focus={0.6} />
 
-      {/* ===== Warm "baked" lighting rig ===== */}
-      {/* Sky: warm cream from above, warm earth from below */}
-      <hemisphereLight args={['#fff0d8', '#5a4030', 0.55]} />
-      {/* Ambient base so nothing is pure black */}
-      <ambientLight intensity={0.18} color="#ffe8cc" />
+      {night ? (
+        <>
+          {/* ===== NIGHT RIG — replicated from blender night_scene.py ===== */}
+          <hemisphereLight args={['#1a2340', '#05070d', 0.25]} />
+          <ambientLight intensity={0.08} color="#33406b" />
 
-      {/* Key light — warm evening sun streaming from upper-front-right */}
-      <directionalLight
-        position={[7, 11, 5]}
-        intensity={2.2}
-        color="#ffd9a0"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0003}
-        shadow-normalBias={0.02}
-        shadow-camera-near={0.5}
-        shadow-camera-far={30}
-        shadow-camera-left={-10}
-        shadow-camera-right={10}
-        shadow-camera-top={10}
-        shadow-camera-bottom={-10}
-        shadow-radius={6}
-      >
-        <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 30]} />
-      </directionalLight>
+          {/* Moon — cool key light from upper-front-right */}
+          <directionalLight
+            position={[8, 12, 9]}
+            intensity={0.55}
+            color="#8ca3ff"
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+            shadow-bias={-0.0003}
+            shadow-normalBias={0.02}
+          >
+            <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 40]} />
+          </directionalLight>
 
-      {/* Fill — cool soft light from the window side (left-back) */}
-      <directionalLight position={[-5, 4, -7]} intensity={0.35} color="#a8c4d8" />
+          {/* ① desk lamp warm glow (lamp sits on the stump cabinet) */}
+          <pointLight position={[-2.6, 3.4, 2.2]} intensity={6} distance={7} decay={2} color="#ffb459" />
+          {/* ② stump-cabinet orb night light */}
+          <pointLight position={[-3.1, 2.2, 1.4]} intensity={2.4} distance={5} decay={2} color="#ffd9a3" />
+          {/* ③ signpost cool spotlight */}
+          <spotLight
+            position={[-4.6, 5.4, 5.2]}
+            target-position={[-5.2, 1.2, 3.6]}
+            angle={0.7}
+            penumbra={0.7}
+            intensity={5}
+            distance={9}
+            decay={2}
+            color="#b8c6ff"
+          />
+          {/* faint interior fill so corners never go pure black */}
+          <pointLight position={[0.5, 6.3, 0]} intensity={1.2} distance={12} decay={2} color="#c9c2e8" />
+        </>
+      ) : (
+        <>
+          {/* ===== DAY RIG — warm "baked" lighting ===== */}
+          <hemisphereLight args={['#fff0d8', '#5a4030', 0.55]} />
+          <ambientLight intensity={0.18} color="#ffe8cc" />
 
-      {/* Warm bounce near the desk — simulates indirect light from screen glow */}
-      <pointLight position={[0, 1.6, 0.6]} intensity={0.5} color="#7ec0d8" distance={5} decay={2} />
-      {/* Warm bounce near the bed area — brighter to kill dead-black corners */}
-      <pointLight position={[-4, 2.5, -1]} intensity={0.5} color="#ffc888" distance={7} decay={2} />
-      {/* Back wall fill — ensures the deep corners behind bed/wardrobe are visible */}
-      <pointLight position={[0, 3.5, -4.5]} intensity={0.35} color="#ffe4c0" distance={8} decay={2} />
-      {/* Wardrobe area fill */}
-      <pointLight position={[4.5, 2.5, -1]} intensity={0.3} color="#ffdca0" distance={6} decay={2} />
+          <directionalLight
+            position={[7, 11, 5]}
+            intensity={2.2}
+            color="#ffd9a0"
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+            shadow-bias={-0.0003}
+            shadow-normalBias={0.02}
+            shadow-camera-near={0.5}
+            shadow-camera-far={30}
+            shadow-camera-left={-10}
+            shadow-camera-right={10}
+            shadow-camera-top={10}
+            shadow-camera-bottom={-10}
+            shadow-radius={6}
+          >
+            <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 30]} />
+          </directionalLight>
+
+          <directionalLight position={[-5, 4, -7]} intensity={0.35} color="#a8c4d8" />
+          <pointLight position={[0, 4.5, 0.6]} intensity={0.5} color="#7ec0d8" distance={5} decay={2} />
+          <pointLight position={[-4, 5.5, 1]} intensity={0.5} color="#ffc888" distance={7} decay={2} />
+          <pointLight position={[0, 6.5, -4.5]} intensity={0.35} color="#ffe4c0" distance={8} decay={2} />
+          <pointLight position={[4.5, 5.5, 1]} intensity={0.3} color="#ffdca0" distance={6} decay={2} />
+        </>
+      )}
 
       {/* World group — pointer-parallax tilt applies to everything inside */}
       <group ref={worldRef}>
-        {/* Room shell — its own group so the intro can scale it in first */}
+        {/* Cottage GLB — shell (skeleton/moss/vines) + interactive furniture.
+            The intro stagger animates furnitureRef children (one per group). */}
         <group ref={shellRef}>
-          <Room />
+          <CottageShell />
         </group>
-
-        {/* Furniture — each in its own wrapper group as an intro-stagger target */}
         <group ref={furnitureRef}>
-          <group><Bed /></group>
-          <group><Desk /></group>
-          <group><Wardrobe /></group>
-          <group><Window /></group>
-          <group><Computer /></group>
-          <group><MedicineCabinet /></group>
-          <group><DeskTrinket /></group>
+          <CottageFurniture />
         </group>
 
-        {/* Dust motes drifting in the window sunbeam (hugging the window,
-            clear of the wardrobe and the display-board stand) */}
+        {/* Dust motes drifting near the window */}
         <Sparkles
           count={70}
           scale={[2.0, 3.5, 2.0]}
-          position={[5.7, 2.5, -3.8]}
+          position={[1.3, 4.2, -2.2]}
           size={2}
           speed={0.25}
           opacity={0.35}
-          color="#ffe3b0"
+          color={night ? '#9fe3b0' : '#ffe3b0'}
         />
 
-        {/* Contact shadows = fake AO under furniture, gives soft ground contact */}
+        {/* Contact shadows = fake AO, small `far` so walls/roof beams don't
+            project giant soft blobs onto the floor (that was the flicker) */}
         <ContactShadows
-          position={[0, 0.01, 0]}
+          position={[0, 0.02, 0]}
           scale={16}
-          far={6}
+          far={1.3}
           resolution={1024}
-          blur={2.5}
-          opacity={0.5}
-          color="#3a2818"
+          blur={2}
+          opacity={0.4}
+          color={night ? '#050810' : '#3a2818'}
         />
       </group>
 
@@ -206,9 +225,10 @@ export function Scene() {
           mipmapBlur
         />
         <BrightnessContrast brightness={0.02} contrast={0.08} />
-        <Vignette eskil={false} offset={0.25} darkness={0.55} blendFunction={BlendFunction.NORMAL} />
-        {/* Film grain — subtle noise adds photographic texture */}
-        <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.18} />
+        <Vignette eskil={false} offset={0.3} darkness={0.45} blendFunction={BlendFunction.NORMAL} />
+        {/* Film grain — subtle noise adds photographic texture (kept faint:
+            at high opacity the per-frame noise reads as flicker) */}
+        <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.07} />
       </EffectComposer>
     </>
   )

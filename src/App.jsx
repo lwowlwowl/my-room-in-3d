@@ -3,16 +3,26 @@ import { Canvas } from '@react-three/fiber'
 import { Preload, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
 import { useStore, labelRef } from './store'
-import { content } from './content'
 import { Scene } from './components/Scene'
-import { ContentPanel } from './components/ContentPanel'
+import { ForestModal } from './components/ForestModal'
 import { Loader } from './components/Loader'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
+// hover labels for the few interactive things (boards + lamp easter egg)
+const HOVER_LABELS = {
+  work: 'My Work',
+  about: 'About',
+  contact: 'Contact',
+  lamp: 'Toggle Night Mode',
+}
+
 export default function App() {
   const active = useStore((s) => s.active)
+  const board = useStore((s) => s.board)
   const hovered = useStore((s) => s.hovered)
   const ready = useStore((s) => s.ready)
+  const night = useStore((s) => s.night)
+  const setNight = useStore((s) => s.setNight)
   const setActive = useStore((s) => s.setActive)
   const setReady = useStore((s) => s.setReady)
 
@@ -38,8 +48,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [setActive])
 
-  const activeContent = active ? content[active] : null
-  const hoveredLabel = hovered ? content[hovered]?.label : ''
+  const hoveredLabel = hovered ? HOVER_LABELS[hovered] : ''
 
   return (
     <>
@@ -50,7 +59,7 @@ export default function App() {
           <Canvas
             dpr={dpr}
             shadows
-            camera={{ position: [8.5, 10, 9], fov: 40, near: 0.1, far: 100 }}
+            camera={{ position: [12, 10, 18.5], fov: 40, near: 0.1, far: 100 }}
             gl={{ antialias: true, powerPreference: 'high-performance' }}
             onCreated={({ gl }) => {
               gl.toneMapping = THREE.ACESFilmicToneMapping
@@ -71,6 +80,16 @@ export default function App() {
           </Canvas>
         </ErrorBoundary>
       </div>
+
+      {/* Day / night toggle — top-right, like a sun/moon dial */}
+      <button
+        type="button"
+        aria-label={night ? 'Switch to day mode' : 'Switch to night mode'}
+        onClick={() => setNight(!night)}
+        className="night-toggle select-none fixed right-5 top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/70 text-xl shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
+      >
+        {night ? '🌙' : '☀️'}
+      </button>
 
       {/* Title chip */}
       <div className="title-chip select-none rounded-2xl bg-white/70 px-4 py-2 text-center shadow-lg backdrop-blur-md">
@@ -93,13 +112,15 @@ export default function App() {
 
       {/* Hint bar */}
       <div className="hint-bar select-none rounded-full bg-white/60 px-4 py-1.5 text-center text-xs font-medium text-woodDark shadow backdrop-blur-md">
-        {active
-          ? 'Click ✕ or empty space to return'
-          : 'Drag to rotate · Scroll to zoom · Click objects to explore'}
+        {board
+          ? 'Click ✕ or outside the sign to close'
+          : active
+            ? 'Click ✕ or empty space to return'
+            : 'Drag to rotate · Scroll to zoom · Click the signpost to explore'}
       </div>
 
       {/* Back button */}
-      {active && (
+      {active && !board && (
         <button
           onClick={() => setActive(null)}
           className="back-btn flex items-center gap-1 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-cream shadow-lg transition hover:scale-105 active:scale-95"
@@ -108,8 +129,8 @@ export default function App() {
         </button>
       )}
 
-      {/* Content panel */}
-      {activeContent && <ContentPanel data={activeContent} />}
+      {/* Forest modal (signpost boards) */}
+      <ForestModal />
     </>
   )
 }

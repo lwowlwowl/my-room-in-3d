@@ -82,13 +82,20 @@ dark = np.clip((0.5 - lum) / 0.2, 0, 1)          # rocks (bright) excluded
 sel = (mask * dark)[..., None]
 
 l = lum[..., None]
-target = np.concatenate([
-    0.14 + 0.36 * l,   # R: 暖黄绿
-    0.36 + 0.50 * l,   # G: 苔藓亮绿
-    0.10 + 0.16 * l,   # B
+# 染色而非平涂: 保留并增强原纹理颗粒(苔藓团块感), 只把色相推向绿
+base = np.power(np.clip(srgb, 0, 1), 0.70)           # 温和提亮
+tint = np.concatenate([
+    np.full_like(l, 0.50),                            # R 压低
+    np.full_like(l, 1.32),                            # G 增强
+    np.full_like(l, 0.48),                            # B 压低
 ], axis=-1)
-target = np.clip(target, 0, 1)
+target = np.clip(base * tint, 0, 1)
 
+# 高通细节增强: 用低频背景归一化原图, 把苔藓颗粒对比拉回来
+small = lum[::16, ::16]
+low = np.repeat(np.repeat(small, 16, axis=0), 16, axis=1)[:h, :w]
+detail = np.clip(srgb / np.maximum(low, 0.03)[..., None], 0.45, 2.1)
+target = np.clip(target * np.power(detail, 0.85), 0, 1)
 out_srgb = srgb * (1 - sel) + target * sel
 out_rgb = np.power(out_srgb, 2.2)
 out = np.concatenate([out_rgb, px[..., 3:4]], axis=-1)

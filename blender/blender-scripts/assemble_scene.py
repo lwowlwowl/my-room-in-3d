@@ -35,8 +35,7 @@ LAYOUT = {
     "C05":   dict(rot=0,   scale=3.1,  pos=(-3.1, -1.4, 3.16)), # 树桩柜左墙角
     "C04":   dict(rot=30,  scale=1.6,  pos=(-2.6, -2.2, 5.96)), # 台灯放树桩柜顶
     "C08":   dict(rot=90,  scale=3.6,  pos=(-5.2, -3.6, 3.16)), # 路牌底座左前
-    "C06":   dict(rot=15,  scale=2.2,  pos=(2.0, -1.6, 3.23)),  # 小鹿地毯右前
-    "C09":   dict(rot=-15, scale=2.6,  pos=(4.0, 0.8, 3.16)),   # 书堆右侧地板
+    # C06(鹿毯)/C09(书) 已按用户要求移出场景
     "VINES": dict(rot=0,   scale=3.2,  pos=(0, -3.0, 8.6)),     # 藤蔓挂前梁
 }
  
@@ -137,6 +136,8 @@ clear()
 import os as _os
 _ONLY = _os.environ.get("ONLY")  # 调试: ONLY=C01,C03 只摆这些
 for key, fname in {**TRIPO, **CODE}.items():
+    if key not in LAYOUT:  # 已移出场景的组件
+        continue
     if _ONLY and key not in _ONLY.split(","):
         continue
     d = tripo_dir if key in TRIPO else code_dir
