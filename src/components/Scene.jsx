@@ -133,9 +133,8 @@ export function Scene() {
             <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 40]} />
           </directionalLight>
 
-          {/* ① desk lamp warm glow — lamp is on the desk at back-left
-              (head ≈ (-3.68, 2.79, -3.53); see Cottage.jsx notes) */}
-          <pointLight position={[-3.68, 2.95, -3.53]} intensity={6} distance={7} decay={2} color="#ffb459" />
+          {/* ① desk lamp warm glow lives INSIDE LampGlow (Cottage.jsx) so the
+              light pool always follows the bulb sphere position */}
           {/* ② stump-cabinet orb night light */}
           <pointLight position={[-3.1, 2.2, 1.4]} intensity={2.4} distance={5} decay={2} color="#ffd9a3" />
           {/* ③ signpost cool spotlight — signpost sits at world ≈ (4.4, 1.8, -3.6) */}

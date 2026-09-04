@@ -19,7 +19,8 @@ import { useStore, labelRef } from '../store'
 // Floor top was z=3.16 in blender → y=3.16 here → shifted down so floor = 0.
 //
 // Measured geometry (decoded from the GLB — see blender/ notes):
-//   • lamp head center ≈ world (-3.68, 2.79, -3.53), on the desk at back-left
+//   • lamp bulb (brightest texture strip) ≈ world (-3.5, 2.72, -3.3), on the
+//     desk at back-left; lamp mesh spans x[-4.3,-3.0] y[1.35,2.95] z[-4.3,-2.9]
 //   • signpost boards are thin panels on the log's ±X faces; the +X face
 //     points toward world (0.577, 0, 0.816) — i.e. at the default camera
 // ---------------------------------------------------------------------------
@@ -138,10 +139,14 @@ function HitProxy({ center, size }) {
   )
 }
 
-// The lamp's lit bulb: an HDR-bright sphere where the shade is. Bloom
-// (luminanceThreshold 0.55) picks it up and turns it into a warm halo.
-// Color flickers gently, in step with the vine-bulb flicker aesthetic.
-const LAMP_HEAD = [-3.68, 2.79, -3.53]
+// The lamp's lit bulb: an HDR-bright sphere over the brightest part of the
+// lamp's baked texture (measured via raycast+uv sampling — the visible bulb
+// strip, not the shade centroid; the centroid sits inside the mesh and
+// separates from the bulb once the camera orbits). Bloom picks it up and
+// turns it into a warm halo; the point light is a CHILD of the sphere so the
+// light pool always follows this position. Color flickers gently, in step
+// with the vine-bulb flicker aesthetic.
+const LAMP_HEAD = [-3.52, 2.35, -3.32]
 
 function LampGlow() {
   const mat = useRef()
@@ -156,6 +161,7 @@ function LampGlow() {
     <mesh position={LAMP_HEAD}>
       <sphereGeometry args={[0.15, 16, 16]} />
       <meshBasicMaterial ref={mat} color={base} toneMapped={false} />
+      <pointLight intensity={6} distance={7} decay={2} color="#ffb459" />
     </mesh>
   )
 }
@@ -163,10 +169,12 @@ function LampGlow() {
 // Glowing labels on the signpost boards at night. The baked boards are blank
 // wood; the boards are thin panels on the log's ±X faces, so the text plane
 // is parallel to that face, nudged along its normal toward the viewer.
+// h = height on the post (fraction); dx/dy/dz = per-board world-space offset
+// (dx 左右, dy 上下, dz 前后 — units match world coords, e.g. 0.1 ≈ 十厘米)
 const BOARD_LABELS = [
-  { id: 'work', label: 'MY WORK', h: 0.8 },
-  { id: 'about', label: 'ABOUT', h: 0.61 },
-  { id: 'contact', label: 'CONTACT', h: 0.41 },
+  { id: 'work', label: 'MY WORK', h: 0.8, dx: 0.07, dy: 0, dz: 0 },
+  { id: 'about', label: 'ABOUT', h: 0.61, dx: 0, dy: 0, dz: 0 },
+  { id: 'contact', label: 'CONTACT', h: 0.41, dx: 0.03, dy: 0, dz: 0 },
 ]
 
 function SignpostNightText({ bb }) {
@@ -202,12 +210,12 @@ function SignpostNightText({ bb }) {
   const fontSize = bb.h * 0.085
   return (
     <group ref={group}>
-      {BOARD_LABELS.map(({ id, label, h }) => (
+      {BOARD_LABELS.map(({ id, label, h, dx, dy, dz }) => (
         <Text
           key={id}
           font="/fonts/CabinSketch-Bold.ttf"
           color={glowColor}
-          position={[bb.cx + dir.x * 0.45, bb.base + h * bb.h, bb.cz + dir.z * 0.3]}
+          position={[bb.cx + dir.x * 0.45 + dx, bb.base + h * bb.h + dy, bb.cz + dir.z * 0.3 + dz]}
           rotation={[0, yaw, 0]}
           fontSize={fontSize}
           maxWidth={1.5}
