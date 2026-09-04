@@ -81,14 +81,32 @@ export default function App() {
         </ErrorBoundary>
       </div>
 
-      {/* Day / night toggle — top-right, like a sun/moon dial */}
+      {/* Day / night toggle — a wooden sign hanging on two ropes */}
       <button
         type="button"
         aria-label={night ? 'Switch to day mode' : 'Switch to night mode'}
         onClick={() => setNight(!night)}
-        className="night-toggle select-none fixed right-5 top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/70 text-xl shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
+        className="night-toggle select-none fixed right-6 top-4 z-20"
       >
-        {night ? '🌙' : '☀️'}
+        <span className="night-toggle-ropes" aria-hidden="true"><i /><i /></span>
+        <span className="night-toggle-plank">
+          <span className="night-toggle-knots" aria-hidden="true"><i /><i /></span>
+          <span className="night-toggle-carve">
+            {night ? (
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M26.5 19.5A11 11 0 1 1 12.5 5.5 8.8 8.8 0 0 0 26.5 19.5z" />
+                <path d="M23 4l.7 2M25.5 8.5l2 .7M21 6.5l.3 1.6" />
+                <path d="M5 27l.9-.9M7.5 24.5l.9.9" strokeWidth="1.6" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="16" cy="16" r="6" />
+                <circle cx="16" cy="16" r="9.5" strokeWidth="1.4" strokeDasharray="1 4.6" />
+                <path d="M16 1.5v3M16 27.5v3M1.5 16h3M27.5 16h3M5.6 5.6l2.1 2.1M24.3 24.3l2.1 2.1M26.4 5.6l-2.1 2.1M7.7 24.3l-2.1 2.1" />
+              </svg>
+            )}
+          </span>
+        </span>
       </button>
 
       {/* Title chip */}

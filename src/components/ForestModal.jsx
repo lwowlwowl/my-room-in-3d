@@ -77,7 +77,10 @@ export function ForestModal() {
         <span className="nail nail-tl" /><span className="nail nail-tr" />
         <span className="nail nail-bl" /><span className="nail nail-br" />
 
-        <button type="button" aria-label="Close" onClick={close} className="forest-close">✕</button>
+        <button type="button" aria-label="Close" onClick={close} className="forest-close">
+          <span className="forest-close-nail" aria-hidden="true" />
+          ✕
+        </button>
 
         <div className="forest-title-plank">
           <span className="forest-title-carve">{data.title}</span>

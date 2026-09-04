@@ -48,6 +48,80 @@
     z-index: 30;
   }
 
+  /* Day/night toggle — carved wooden sign hung on two ropes from the top */
+  .night-toggle {
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    transform-origin: top center;
+    animation: night-toggle-sway 3.6s ease-in-out infinite;
+  }
+  .night-toggle-ropes {
+    display: block;
+    height: 26px;
+    position: relative;
+  }
+  .night-toggle-ropes i {
+    position: absolute;
+    top: -8px;
+    width: 3.5px;
+    height: 34px;
+    background: linear-gradient(180deg, rgba(122, 90, 56, 0.55), #7a5a38);
+    border-radius: 2px;
+    box-shadow: 1px 0 0 rgba(0, 0, 0, 0.12);
+  }
+  .night-toggle-ropes i:first-child { left: 17px; transform: rotate(-7deg); }
+  .night-toggle-ropes i:last-child { right: 17px; transform: rotate(7deg); }
+  .night-toggle-plank {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 78px;
+    height: 62px;
+    border-radius: 14px;
+    border: 3px solid #5c3f24;
+    /* wood grain: layered gradients, same recipe as the big sign */
+    background:
+      repeating-linear-gradient(94deg, rgba(70, 45, 25, 0.08) 0 3px, transparent 3px 14px),
+      repeating-linear-gradient(2deg, rgba(255, 230, 190, 0.06) 0 2px, transparent 2px 22px),
+      linear-gradient(165deg, #b98d5e 0%, #a97c4e 45%, #96683c 100%);
+    box-shadow:
+      inset 0 2px 3px rgba(255, 230, 190, 0.22),
+      inset 0 -3px 5px rgba(60, 38, 20, 0.35),
+      0 4px 9px rgba(0, 0, 0, 0.35);
+    transform: rotate(2deg);
+    transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.5, 1);
+  }
+  /* rope knots at the plank's top corners */
+  .night-toggle-knots i {
+    position: absolute;
+    top: -6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #a8845c 0%, #7a5a38 60%, #4d3a20 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+  .night-toggle-knots i:first-child { left: 9px; }
+  .night-toggle-knots i:last-child { right: 9px; }
+  /* carved icon — recessed look: darker engraving with a light lower lip */
+  .night-toggle-carve {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f0d9a0;
+    filter: drop-shadow(0 1.5px 0 rgba(60, 38, 20, 0.9)) drop-shadow(0 -0.5px 0 rgba(255, 235, 200, 0.25));
+  }
+  .night-toggle-carve svg { width: 38px; height: 38px; }
+  .night-toggle:hover .night-toggle-plank { transform: rotate(-2.5deg) scale(1.07); }
+  .night-toggle:active .night-toggle-plank { transform: rotate(2deg) scale(0.93); }
+  @keyframes night-toggle-sway {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4.2deg); }
+  }
+
   /* Bottom hint */
   .hint-bar {
     position: fixed;
@@ -235,26 +309,42 @@
 .nail-bl { bottom: 10px; left: 10px; }
 .nail-br { bottom: 10px; right: 10px; }
 
-/* round wooden close button */
+/* mini wooden plank close button, nailed inside the sign's top-right corner */
 .forest-close {
   position: absolute;
-  top: -14px;
-  right: -14px;
+  top: 8px;
+  right: 8px;
   z-index: 3;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 4px solid #6d4c30;
-  background: radial-gradient(circle at 35% 30%, #c59a6a 0%, #a97c4e 60%, #8a6240 100%);
-  color: #3c2a18;
+  width: 42px;
+  height: 34px;
+  border-radius: 8px;
+  border: 3px solid #5c3f24;
+  background: linear-gradient(180deg, #8a6240 0%, #77522f 100%);
+  color: #f0d9a0;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
   font-size: 17px;
   font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 2px 3px rgba(255, 230, 190, 0.15), 0 3px 6px rgba(0, 0, 0, 0.3);
+  transform: rotate(2deg);
   transition: transform 0.18s ease;
 }
-.forest-close:hover { transform: scale(1.1) rotate(6deg); }
-.forest-close:active { transform: scale(0.94); }
+.forest-close:hover { transform: rotate(-2deg) scale(1.08); }
+.forest-close:active { transform: rotate(2deg) scale(0.94); }
+/* nail through the plank's top edge, same as the corner nails */
+.forest-close-nail {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d8cdb8 0%, #8d8171 55%, #4d4438 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+}
 
 /* carved title plank */
 .forest-title-plank {
