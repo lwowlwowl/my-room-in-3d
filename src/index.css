@@ -121,6 +121,8 @@
     0%, 100% { transform: rotate(-4deg); }
     50% { transform: rotate(4.2deg); }
   }
+  /* the sound plank sways out of phase so the pair doesn't move in lockstep */
+  .sound-toggle { animation-delay: -1.7s; }
 
   /* Bottom hint */
   .hint-bar {

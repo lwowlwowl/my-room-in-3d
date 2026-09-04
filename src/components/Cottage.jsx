@@ -311,6 +311,17 @@ function SignpostHit({ boardId, center, size, camera, viewport, tmp }) {
   )
 }
 
+// Moonlight through the window — always-on at night: just a soft cool point
+// light near the window (no visible panel — a flat plane there reads as a
+// stark rectangle against the frame, see earlier iteration).
+const WINDOW_CENTER = [-3.9, 3.9, 1.2]
+
+function WindowMoonlight() {
+  return (
+    <pointLight position={[WINDOW_CENTER[0] - 0.1, WINDOW_CENTER[1] + 0.3, WINDOW_CENTER[2] - 0.4]} intensity={0.6} distance={5} decay={2} color="#aebfff" />
+  )
+}
+
 export function CottageFurniture() {
   const { lamp, lampMat, signpostMat } = useCottageParts()
   const setHovered = useStore((s) => s.setHovered)
@@ -340,6 +351,9 @@ export function CottageFurniture() {
 
       {/* Lit bulb at the lamp shade (night only) */}
       {night && <LampGlow />}
+
+      {/* Moonlight glow through the window (night only, always on) */}
+      {night && <WindowMoonlight />}
 
       {/* Signpost — three clickable boards (hitboxes measured at runtime) */}
       <SignpostBoards />

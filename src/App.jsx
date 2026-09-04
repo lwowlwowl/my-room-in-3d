@@ -7,6 +7,7 @@ import { Scene } from './components/Scene'
 import { ForestModal } from './components/ForestModal'
 import { Loader } from './components/Loader'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { startAmbience, stopAmbience } from './audio'
 
 // hover labels for the few interactive things (boards + lamp easter egg)
 const HOVER_LABELS = {
@@ -47,6 +48,13 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [setActive])
+
+  // ambience — muted until the user opts in (autoplay policy)
+  const [soundOn, setSoundOn] = useState(false)
+  const toggleSound = () => {
+    if (soundOn) { stopAmbience(); setSoundOn(false) }
+    else { startAmbience(); setSoundOn(true) }
+  }
 
   const hoveredLabel = hovered ? HOVER_LABELS[hovered] : ''
 
@@ -103,6 +111,33 @@ export default function App() {
                 <circle cx="16" cy="16" r="6" />
                 <circle cx="16" cy="16" r="9.5" strokeWidth="1.4" strokeDasharray="1 4.6" />
                 <path d="M16 1.5v3M16 27.5v3M1.5 16h3M27.5 16h3M5.6 5.6l2.1 2.1M24.3 24.3l2.1 2.1M26.4 5.6l-2.1 2.1M7.7 24.3l-2.1 2.1" />
+              </svg>
+            )}
+          </span>
+        </span>
+      </button>
+
+      {/* Sound toggle — another hanging plank, left of the day/night one.
+          Muted until first click (browser autoplay policy). */}
+      <button
+        type="button"
+        aria-label={soundOn ? 'Mute ambience' : 'Play ambience'}
+        onClick={toggleSound}
+        className="night-toggle sound-toggle select-none fixed right-24 top-4 z-20"
+      >
+        <span className="night-toggle-ropes" aria-hidden="true"><i /><i /></span>
+        <span className="night-toggle-plank">
+          <span className="night-toggle-knots" aria-hidden="true"><i /><i /></span>
+          <span className="night-toggle-carve">
+            {soundOn ? (
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M8 12v8h5l6 5V7l-6 5H8z" />
+                <path d="M23.5 11.5a7 7 0 0 1 0 9M26.5 8.5a11.5 11.5 0 0 1 0 15" strokeWidth="1.6" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M8 12v8h5l6 5V7l-6 5H8z" />
+                <path d="M23 13l6 6M29 13l-6 6" strokeWidth="2.2" />
               </svg>
             )}
           </span>
