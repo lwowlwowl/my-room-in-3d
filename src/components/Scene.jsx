@@ -9,6 +9,23 @@ import { useStore } from '../store'
 import { focusSpots, defaultCamera } from '../content'
 import { CottageShell, CottageFurniture } from './Cottage'
 
+// SpotLight whose target is properly mounted in the scene graph — a bare
+// `target-position` prop does NOT work in R3F (the target object never gets
+// its matrixWorld updated, so the light keeps aiming at the origin).
+function AimedSpotLight({ position, target, ...props }) {
+  const light = useRef()
+  const targetObj = useMemo(() => new THREE.Object3D(), [])
+  useEffect(() => {
+    if (light.current) light.current.target = targetObj
+  }, [targetObj])
+  return (
+    <>
+      <primitive object={targetObj} position={target} />
+      <spotLight ref={light} position={position} {...props} />
+    </>
+  )
+}
+
 export function Scene() {
   const controlsRef = useRef()
   const worldRef = useRef() // whole room — used for pointer parallax
@@ -116,14 +133,15 @@ export function Scene() {
             <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 40]} />
           </directionalLight>
 
-          {/* ① desk lamp warm glow (lamp sits on the stump cabinet) */}
-          <pointLight position={[-2.6, 3.4, 2.2]} intensity={6} distance={7} decay={2} color="#ffb459" />
+          {/* ① desk lamp warm glow — lamp is on the desk at back-left
+              (head ≈ (-3.68, 2.79, -3.53); see Cottage.jsx notes) */}
+          <pointLight position={[-3.68, 2.95, -3.53]} intensity={6} distance={7} decay={2} color="#ffb459" />
           {/* ② stump-cabinet orb night light */}
           <pointLight position={[-3.1, 2.2, 1.4]} intensity={2.4} distance={5} decay={2} color="#ffd9a3" />
-          {/* ③ signpost cool spotlight */}
-          <spotLight
-            position={[-4.6, 5.4, 5.2]}
-            target-position={[-5.2, 1.2, 3.6]}
+          {/* ③ signpost cool spotlight — signpost sits at world ≈ (4.4, 1.8, -3.6) */}
+          <AimedSpotLight
+            position={[6.5, 7, 0.8]}
+            target={[4.4, 1.8, -3.6]}
             angle={0.7}
             penumbra={0.7}
             intensity={5}

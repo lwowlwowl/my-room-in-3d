@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, Text } from '@react-three/drei'
+import { gsap } from 'gsap'
 import * as THREE from 'three'
 import { useStore, labelRef } from '../store'
 
@@ -9,11 +10,18 @@ import { useStore, labelRef } from '../store'
 // One compressed GLB (Draco + WebP) holds ALL furniture. Everything renders
 // as plain scenery EXCEPT:
 //   • the signpost — its three boards (MY WORK / ABOUT / CONTACT) are each
-//     clickable and open a forest-themed modal (see ForestModal.jsx)
-//   • the desk lamp — day/night toggle easter egg
+//     clickable and open a forest-themed modal (see ForestModal.jsx).
+//     At night the boards light up with glowing labels (SignpostNightText).
+//   • the desk lamp — day/night toggle easter egg; at night its material
+//     glows and an HDR bulb sphere at the shade blooms (LampGlow)
 //
 // Blender is Z-up, glTF is Y-up: blender (x, y, z) → three (x, z, -y).
 // Floor top was z=3.16 in blender → y=3.16 here → shifted down so floor = 0.
+//
+// Measured geometry (decoded from the GLB — see blender/ notes):
+//   • lamp head center ≈ world (-3.68, 2.79, -3.53), on the desk at back-left
+//   • signpost boards are thin panels on the log's ±X faces; the +X face
+//     points toward world (0.577, 0, 0.816) — i.e. at the default camera
 // ---------------------------------------------------------------------------
 
 const FLOOR_OFFSET = -3.16
@@ -47,6 +55,8 @@ function useCottageParts() {
       if (name === SIGNPOST_NODE) { signpost = child; continue }
       shell.push(child) // everything else is scenery
     }
+    const lampMat = lamp && lamp.isMesh ? lamp.material : null
+    const signpostMat = signpost && signpost.isMesh ? signpost.material : null
     // enable shadows on every mesh in the glb; disable mesh raycast —
     // these are 100k+ poly Tripo meshes, CPU raycast would freeze pointer
     // events. Interaction is handled by invisible low-poly proxy boxes.
@@ -65,12 +75,27 @@ function useCottageParts() {
         if (m && m.emissive && !bulbMats.includes(m)) bulbMats.push(m)
       }
     })
-    _parts = { shell, lamp, signpost, bulbMats }
+    _parts = { shell, lamp, signpost, bulbMats, lampMat, signpostMat }
     // defensive: restore the signpost's baked transform
     if (signpost) {
       signpost.position.set(...SIGNPOST_TF.pos)
       signpost.quaternion.set(...SIGNPOST_TF.rot)
       signpost.scale.setScalar(SIGNPOST_TF.scale)
+    }
+    // Night glow: reuse the basecolor map as an emissive map so the object's
+    // own texture modulates its glow. Intensity is toggled by `night`
+    // (see NightGlow below) — kept at 0 here so day mode is untouched.
+    const emissiveSetup = [
+      [lampMat, '#ffb459'],
+      [signpostMat, '#b8c8e8'],
+    ]
+    for (const [m, color] of emissiveSetup) {
+      if (m && m.map && !m.emissiveMap) {
+        m.emissiveMap = m.map
+        m.emissive = new THREE.Color(color)
+        m.emissiveIntensity = 0
+        m.needsUpdate = true
+      }
     }
     return _parts
   }, [scene])
@@ -113,6 +138,91 @@ function HitProxy({ center, size }) {
   )
 }
 
+// The lamp's lit bulb: an HDR-bright sphere where the shade is. Bloom
+// (luminanceThreshold 0.55) picks it up and turns it into a warm halo.
+// Color flickers gently, in step with the vine-bulb flicker aesthetic.
+const LAMP_HEAD = [-3.68, 2.79, -3.53]
+
+function LampGlow() {
+  const mat = useRef()
+  const seed = useMemo(() => Math.random() * 10, [])
+  const base = useMemo(() => new THREE.Color(2.6, 1.8, 0.95), [])
+  useFrame(({ clock }) => {
+    if (!mat.current) return
+    const f = 0.86 + 0.14 * Math.sin(clock.elapsedTime * 7 + seed)
+    mat.current.color.copy(base).multiplyScalar(f)
+  })
+  return (
+    <mesh position={LAMP_HEAD}>
+      <sphereGeometry args={[0.15, 16, 16]} />
+      <meshBasicMaterial ref={mat} color={base} toneMapped={false} />
+    </mesh>
+  )
+}
+
+// Glowing labels on the signpost boards at night. The baked boards are blank
+// wood; the boards are thin panels on the log's ±X faces, so the text plane
+// is parallel to that face, nudged along its normal toward the viewer.
+const BOARD_LABELS = [
+  { id: 'work', label: 'MY WORK', h: 0.8 },
+  { id: 'about', label: 'ABOUT', h: 0.61 },
+  { id: 'contact', label: 'CONTACT', h: 0.41 },
+]
+
+function SignpostNightText({ bb }) {
+  const night = useStore((s) => s.night)
+  const group = useRef()
+  // board face normal = signpost baked yaw + 90° (local +X rotated into world)
+  const yaw = useMemo(() => {
+    const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(...SIGNPOST_TF.rot), 'YXZ')
+    return e.y + Math.PI / 2
+  }, [])
+  const dir = useMemo(() => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), [yaw])
+  // HDR color pushes the glyphs past the bloom threshold (troika's material
+  // deletes .color when the mesh color prop is null — set it via the prop)
+  const glowColor = useMemo(() => new THREE.Color(2.1, 1.55, 0.9), [])
+
+  useEffect(() => {
+    if (!night || !group.current) return
+    const mats = []
+    group.current.traverse((o) => { if (o.material) mats.push(o.material) })
+    mats.forEach((m) => {
+      if ('toneMapped' in m) m.toneMapped = false
+      m.transparent = true
+      m.opacity = 0
+      m.needsUpdate = true
+    })
+    // staggered fade-in, one board at a time
+    const tl = gsap.timeline()
+    mats.forEach((m, i) => tl.to(m, { opacity: 1, duration: 0.9, delay: 0.15 + i * 0.22 }, 0))
+    return () => tl.kill()
+  }, [night])
+
+  if (!night) return null
+  const fontSize = bb.h * 0.085
+  return (
+    <group ref={group}>
+      {BOARD_LABELS.map(({ id, label, h }) => (
+        <Text
+          key={id}
+          font="/fonts/CabinSketch-Bold.ttf"
+          color={glowColor}
+          position={[bb.cx + dir.x * 0.45, bb.base + h * bb.h, bb.cz + dir.z * 0.3]}
+          rotation={[0, yaw, 0]}
+          fontSize={fontSize}
+          maxWidth={1.5}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={fontSize * 0.06}
+          outlineColor="#3d2a12"
+        >
+          {label}
+        </Text>
+      ))}
+    </group>
+  )
+}
+
 // The three signpost boards, as fractions of the signpost's world bounding
 // box (measured off the model): center height + band height. We can't hardcode
 // world coords — the GLB roots carry their own baked transforms.
@@ -148,6 +258,7 @@ function SignpostBoards() {
       <group position={[0, FLOOR_OFFSET, 0]}>
         {signpost && <primitive object={signpost} />}
       </group>
+      {bb && <SignpostNightText bb={bb} />}
       {bb && BOARD_BANDS.map(({ id, h, band }) => (
         <SignpostHit
           key={id}
@@ -193,9 +304,17 @@ function SignpostHit({ boardId, center, size, camera, viewport, tmp }) {
 }
 
 export function CottageFurniture() {
-  const { lamp } = useCottageParts()
+  const { lamp, lampMat, signpostMat } = useCottageParts()
   const setHovered = useStore((s) => s.setHovered)
   const setNight = useStore((s) => s.setNight)
+  const night = useStore((s) => s.night)
+
+  // Night mode: lamp body gets a warm glow, signpost wood a faint moonlight
+  // (both are texture-modulated — see useCottageParts' emissiveMap setup).
+  useEffect(() => {
+    if (lampMat) lampMat.emissiveIntensity = night ? 1.1 : 0
+    if (signpostMat) signpostMat.emissiveIntensity = night ? 0.4 : 0
+  }, [night, lampMat, signpostMat])
 
   return (
     <>
@@ -207,9 +326,12 @@ export function CottageFurniture() {
           onClick={(e) => { e.stopPropagation(); setNight(!useStore.getState().night) }}
         >
           <primitive object={lamp} />
-          <HitProxy center={[-2.6, 2.9, 2.2]} size={[1.5, 1.7, 1.5]} />
+          <HitProxy center={[-3.66, 2.15, -3.61]} size={[1.5, 1.75, 1.5]} />
         </group>
       )}
+
+      {/* Lit bulb at the lamp shade (night only) */}
+      {night && <LampGlow />}
 
       {/* Signpost — three clickable boards (hitboxes measured at runtime) */}
       <SignpostBoards />
