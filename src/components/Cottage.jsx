@@ -130,11 +130,20 @@ export function CottageShell() {
 // would stall pointer events, so interaction uses cheap boxes instead.
 // center is floor-relative three-space (== final world y); we render inside
 // the group that is already offset by FLOOR_OFFSET, so add 3.16 back on y.
-function HitProxy({ center, size }) {
+// DEBUG_HOTBOXES=true paints every interactive box in its own color so the
+// hover regions are visible while tuning coordinates — set false to hide.
+const DEBUG_HOTBOXES = false
+
+function HitProxy({ center, size, debugColor }) {
   return (
     <mesh position={[center[0], center[1] - FLOOR_OFFSET, center[2]]}>
       <boxGeometry args={size} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      <meshBasicMaterial
+        transparent
+        opacity={DEBUG_HOTBOXES ? 0.4 : 0}
+        color={debugColor}
+        depthWrite={false}
+      />
     </mesh>
   )
 }
@@ -235,9 +244,9 @@ function SignpostNightText({ bb }) {
 // box (measured off the model): center height + band height. We can't hardcode
 // world coords — the GLB roots carry their own baked transforms.
 const BOARD_BANDS = [
-  { id: 'work', h: 0.81, band: 0.09 },
-  { id: 'about', h: 0.59, band: 0.09 },
-  { id: 'contact', h: 0.37, band: 0.09 },
+  { id: 'work', h: 0.81, band: 0.09, debugColor: '#ffaa00' },
+  { id: 'about', h: 0.59, band: 0.09, debugColor: '#aa55ff' },
+  { id: 'contact', h: 0.37, band: 0.09, debugColor: '#33cc88' },
 ]
 
 function SignpostBoards() {
@@ -267,12 +276,13 @@ function SignpostBoards() {
         {signpost && <primitive object={signpost} />}
       </group>
       {bb && <SignpostNightText bb={bb} />}
-      {bb && BOARD_BANDS.map(({ id, h, band }) => (
+      {bb && BOARD_BANDS.map(({ id, h, band, debugColor }) => (
         <SignpostHit
           key={id}
           boardId={id}
           center={[bb.cx, bb.base + h * bb.h, bb.cz]}
-          size={[bb.sx * 0.95, band * 2 * bb.h, bb.sz * 0.95]}
+          size={[bb.sx * 0.65, band * 2 * bb.h, bb.sz * 0.65]}
+          debugColor={debugColor}
           camera={camera}
           viewport={viewport}
           tmp={tmp}
@@ -282,7 +292,7 @@ function SignpostBoards() {
   )
 }
 
-function SignpostHit({ boardId, center, size, camera, viewport, tmp }) {
+function SignpostHit({ boardId, center, size, debugColor, camera, viewport, tmp }) {
   const setHovered = useStore((s) => s.setHovered)
   const setBoard = useStore((s) => s.setBoard)
   const setActive = useStore((s) => s.setActive)
@@ -306,7 +316,12 @@ function SignpostHit({ boardId, center, size, camera, viewport, tmp }) {
       onClick={(e) => { e.stopPropagation(); setActive('contact'); setBoard(boardId) }}
     >
       <boxGeometry args={size} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      <meshBasicMaterial
+        transparent
+        opacity={DEBUG_HOTBOXES ? 0.4 : 0}
+        color={debugColor}
+        depthWrite={false}
+      />
     </mesh>
   )
 }
@@ -319,6 +334,73 @@ const WINDOW_CENTER = [-3.9, 3.9, 1.2]
 function WindowMoonlight() {
   return (
     <pointLight position={[WINDOW_CENTER[0] - 0.1, WINDOW_CENTER[1] + 0.3, WINDOW_CENTER[2] - 0.4]} intensity={0.6} distance={5} decay={2} color="#aebfff" />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// The green monitor is part of C03, the single baked desk mesh. The display
+// glass itself is the plane x≈-3.86, y[1.51,2.13], z[-2.36,-1.92]. It faces
+// the room along +X; the similarly sized object at z≈-4.58 is a desk prop by
+// the mushroom, not the computer. Keep this proxy close to the glass bounds
+// so it cannot absorb pointer events from nearby desk objects.
+// ---------------------------------------------------------------------------
+const COMPUTER_HIT = {
+  center: [-3.86, 1.9, -1.8],
+  // Local Z is depth. After the Y rotation it maps to world +X, while local X
+  // maps to the display width along world Z.
+  size: [1.15, 0.9, 0.6],
+  rotation: [-0.02, Math.PI / 2 - 0.03, 0],
+}
+
+function ComputerScreen() {
+  const setHovered = useStore((s) => s.setHovered)
+  const setActive = useStore((s) => s.setActive)
+  const setScreen = useStore((s) => s.setScreen)
+  const isHovered = useStore((st) => st.hovered === 'computer')
+  const { camera, size: viewport } = useThree()
+  const meshRef = useRef()
+  const tmp = useRef(new THREE.Vector3())
+  const openTimer = useRef(null)
+
+  // unmount safety: never fire the modal after the scene is gone
+  useEffect(() => () => clearTimeout(openTimer.current), [])
+
+  useFrame(() => {
+    if (!isHovered || !labelRef.current || !meshRef.current) return
+    // Use the proxy's live world transform so the label tracks scene parallax.
+    meshRef.current.localToWorld(tmp.current.set(0, COMPUTER_HIT.size[1] / 2 + 0.2, 0))
+    const v = tmp.current.project(camera)
+    const el = labelRef.current
+    el.style.left = `${(v.x * 0.5 + 0.5) * viewport.width}px`
+    el.style.top = `${(-v.y * 0.5 + 0.5) * viewport.height}px`
+  })
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={COMPUTER_HIT.center}
+      rotation={COMPUTER_HIT.rotation}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered('computer') }}
+      onPointerOut={(e) => { e.stopPropagation(); if (useStore.getState().hovered === 'computer') setHovered(null) }}
+      onClick={(e) => {
+        e.stopPropagation()
+        setActive('computer')
+        // let the 1.4s dolly+FOV zoom read first (tween is ~90% done at 1s),
+        // then power the screen on
+        clearTimeout(openTimer.current)
+        openTimer.current = setTimeout(() => {
+          if (useStore.getState().active === 'computer') setScreen(true)
+        }, 1000)
+      }}
+    >
+      <boxGeometry args={COMPUTER_HIT.size} />
+      <meshBasicMaterial
+        transparent
+        opacity={DEBUG_HOTBOXES ? 0.45 : 0}
+        color={DEBUG_HOTBOXES ? '#44aaff' : undefined}
+        depthWrite={false}
+      />
+    </mesh>
   )
 }
 
@@ -345,7 +427,7 @@ export function CottageFurniture() {
           onClick={(e) => { e.stopPropagation(); setNight(!useStore.getState().night) }}
         >
           <primitive object={lamp} />
-          <HitProxy center={[-3.66, 2.15, -3.61]} size={[1.5, 1.75, 1.5]} />
+          <HitProxy center={[-3.66, 2.15, -3.61]} size={[1.5, 1.75, 1.5]} debugColor="#ff4444" />
         </group>
       )}
 
@@ -357,6 +439,9 @@ export function CottageFurniture() {
 
       {/* Signpost — three clickable boards (hitboxes measured at runtime) */}
       <SignpostBoards />
+
+      {/* Computer on the desk — click zooms to the screen and powers it on */}
+      <ComputerScreen />
     </>
   )
 }

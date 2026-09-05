@@ -495,3 +495,356 @@
 /* thin wooden scrollbar */
 .forest-sign::-webkit-scrollbar { width: 6px; }
 .forest-sign::-webkit-scrollbar-thumb { background: rgba(60, 38, 20, 0.4); border-radius: 3px; }
+
+/* ============================================================================
+   SCREEN MODAL — the desk computer: a cream-white retro monitor (same body
+   colour as the 3D monitor on the desk) framing a "CottageOS" desktop.
+   ============================================================================ */
+
+.screen-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(38, 46, 30, 0.45) 0%, rgba(20, 26, 16, 0.72) 100%);
+  backdrop-filter: blur(6px);
+  animation: forest-veil-in 0.35s ease both;
+}
+
+/* the monitor body — cream white like the model */
+.screen-monitor {
+  position: relative;
+  width: min(640px, 92vw);
+  border-radius: 30px;
+  padding: 20px 20px 0;
+  background:
+    repeating-linear-gradient(94deg, rgba(120, 100, 70, 0.04) 0 3px, transparent 3px 16px),
+    linear-gradient(170deg, #f7f1e2 0%, #efe6d2 55%, #e3d7bd 100%);
+  border: 4px solid #b9a67f;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 252, 240, 0.8),
+    inset 0 -5px 0 rgba(150, 128, 92, 0.35),
+    0 28px 70px rgba(0, 0, 0, 0.55);
+  animation: screen-power-on 0.55s cubic-bezier(0.34, 1.45, 0.5, 1) both;
+}
+@keyframes screen-power-on {
+  0% { transform: scale(0.82) translateY(26px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* wooden pegs pinning the monitor to the veil, house-style */
+.screen-nail {
+  position: absolute;
+  top: 9px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d8cdb8 0%, #8d8171 55%, #4d4438 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+.screen-nail-tl { left: 12px; }
+.screen-nail-tr { right: 12px; }
+
+.screen-close {
+  position: absolute;
+  top: 7px;
+  right: 32px;
+  z-index: 3;
+  width: 40px;
+  height: 32px;
+  border-radius: 8px;
+  border: 3px solid #8a7350;
+  background: linear-gradient(180deg, #b99a6a 0%, #a1804f 100%);
+  color: #f7efdc;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: inset 0 2px 3px rgba(255, 240, 210, 0.25), 0 3px 6px rgba(0, 0, 0, 0.3);
+  transform: rotate(2deg);
+  transition: transform 0.18s ease;
+}
+.screen-close:hover { transform: rotate(-2deg) scale(1.08); }
+.screen-close:active { transform: rotate(2deg) scale(0.94); }
+
+/* dark screen set into the white body */
+.screen-bezel {
+  border-radius: 18px;
+  padding: 9px;
+  background: linear-gradient(180deg, #d9cdaf 0%, #cbbb94 100%);
+  border: 2px solid rgba(122, 102, 66, 0.5);
+  box-shadow: inset 0 2px 5px rgba(70, 55, 30, 0.35);
+}
+.screen-display {
+  position: relative;
+  border-radius: 11px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(120, 200, 130, 0.10) 0%, transparent 55%),
+    linear-gradient(178deg, #16220f 0%, #1A2A1A 60%, #14200f 100%);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.55);
+}
+/* subtle CRT scanlines + glass glare */
+.screen-display::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+.screen-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 46%;
+  bottom: 58%;
+  background: linear-gradient(135deg, rgba(220, 245, 210, 0.09) 0%, transparent 65%);
+  pointer-events: none;
+  border-radius: 11px 0 0 0;
+}
+
+/* monitor chin + wood stand */
+.screen-chin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 0 6px;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: lowercase;
+  color: #8a7350;
+}
+.screen-chin-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d6f5c6 0%, #77c06a 55%, #2f6b2a 100%);
+  box-shadow: 0 0 6px rgba(140, 220, 120, 0.8);
+  animation: screen-led-breathe 3.2s ease-in-out infinite;
+}
+@keyframes screen-led-breathe {
+  0%, 100% { box-shadow: 0 0 4px rgba(140, 220, 120, 0.55); }
+  50% { box-shadow: 0 0 9px rgba(140, 220, 120, 0.95); }
+}
+.screen-stand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 3px;
+  padding-bottom: 16px;
+}
+.screen-stand i {
+  display: block;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #e9dfc6 0%, #cdbb92 100%);
+  border: 2px solid #b9a67f;
+}
+.screen-stand i:nth-child(1) { width: 46px; height: 13px; }
+.screen-stand i:nth-child(2) { width: 64px; height: 7px; }
+.screen-stand i:nth-child(3) { width: 96px; height: 5px; }
+
+/* ——— CottageOS desktop ——— */
+.screen-desktop {
+  position: relative;
+  min-height: 380px;
+  max-height: min(58vh, 480px);
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  color: #cfe6c2;
+}
+
+.screen-menubar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  background: rgba(18, 32, 14, 0.85);
+  border-bottom: 1px solid rgba(143, 184, 143, 0.25);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+.screen-menubar-dots { display: flex; gap: 5px; }
+.screen-menubar-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8FB88F;
+  opacity: 0.75;
+}
+.screen-menubar-title {
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: 15px;
+  color: #b7e2a8;
+}
+.screen-menubar-clock { margin-left: auto; color: #9fc792; font-variant-numeric: tabular-nums; }
+
+.screen-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 12px;
+  width: 86px;
+  flex-shrink: 0;
+}
+.screen-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: #cfe6c2;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.screen-icon svg { width: 30px; height: 30px; }
+.screen-icon:hover { background: rgba(143, 184, 143, 0.14); border-color: rgba(143, 184, 143, 0.35); }
+.screen-icon.on { background: rgba(143, 184, 143, 0.2); border-color: rgba(143, 184, 143, 0.55); }
+
+/* absolute chrome inside the desktop: menubar / icon rail / window / taskbar */
+.screen-desktop .screen-menubar,
+.screen-desktop .screen-taskbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.screen-desktop .screen-menubar { top: 0; }
+.screen-desktop .screen-taskbar { bottom: 0; }
+.screen-icons { position: absolute; top: 46px; bottom: 38px; left: 0; }
+
+.screen-window {
+  position: absolute;
+  top: 52px;
+  left: 104px;
+  right: 14px;
+  bottom: 44px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(16, 28, 13, 0.92);
+  border: 1.5px solid rgba(143, 184, 143, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  animation: screen-window-in 0.28s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+}
+@keyframes screen-window-in {
+  from { transform: translateY(14px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.screen-window-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px 6px 14px;
+  background: rgba(143, 184, 143, 0.16);
+  border-bottom: 1px solid rgba(143, 184, 143, 0.3);
+  font-size: 14px;
+  color: #b7e2a8;
+  letter-spacing: 0.05em;
+}
+.screen-window-bar button {
+  width: 24px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(143, 184, 143, 0.5);
+  background: rgba(143, 184, 143, 0.12);
+  color: #cfe6c2;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.screen-window-bar button:hover { background: rgba(201, 111, 95, 0.35); border-color: rgba(201, 111, 95, 0.7); }
+.screen-window-body { flex: 1; overflow-y: auto; }
+
+/* hello.txt terminal */
+.screen-term { padding: 16px 18px; font-family: 'Courier New', ui-monospace, monospace; font-size: 15px; line-height: 1.75; color: #a8d89a; }
+.screen-term p { margin: 0; white-space: pre-wrap; }
+.screen-caret {
+  display: inline-block;
+  width: 9px;
+  height: 16px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: #a8d89a;
+  animation: screen-caret-blink 1s steps(1) infinite;
+}
+@keyframes screen-caret-blink { 50% { opacity: 0; } }
+
+/* garden toy */
+.screen-garden {
+  position: relative;
+  height: 100%;
+  min-height: 240px;
+  cursor: crosshair;
+  overflow: hidden;
+}
+.screen-garden-soil {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(72, 92, 50, 0.55) 0%, rgba(52, 70, 36, 0.75) 100%);
+  border-top: 2px dashed rgba(143, 184, 143, 0.35);
+}
+.screen-garden-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 17px;
+  color: rgba(207, 230, 194, 0.55);
+  pointer-events: none;
+}
+.screen-sprout {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+  animation: screen-sprout-in 0.4s cubic-bezier(0.34, 1.5, 0.5, 1) both;
+}
+@keyframes screen-sprout-in {
+  from { transform: translate(-50%, -30%) scale(0.1); opacity: 0; }
+}
+
+/* taskbar */
+.screen-taskbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(18, 32, 14, 0.85);
+  border-top: 1px solid rgba(143, 184, 143, 0.25);
+  font-size: 13px;
+  color: #9fc792;
+  letter-spacing: 0.08em;
+}
+.screen-taskbar-glow {
+  width: 34px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(143, 216, 138, 0.7), transparent);
+  animation: screen-led-breathe 2.6s ease-in-out infinite;
+}
+
+/* small screens: window sits under the icons */
+@media (max-width: 560px) {
+  .screen-monitor { padding: 14px 14px 0; }
+  .screen-desktop { min-height: 420px; padding-top: 42px; }
+  .screen-icons { position: static; flex-direction: row; width: auto; padding: 10px; gap: 8px; }
+  .screen-icon svg { width: 22px; height: 22px; }
+  .screen-icon span { font-size: 11px; }
+  .screen-window { left: 14px; top: 128px; }
+}
+

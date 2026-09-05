@@ -70,6 +70,8 @@ export const focusSpots = {
   // signpost actually sits at world ≈ (4.4, 0, -3.6) — the GLB roots carry
   // their own baked transforms (rot -0.96, scale 3.6), so trust runtime coords
   contact: { camera: [7.4, 4.4, 2.2], target: [4.4, 1.8, -3.6] },
+  // Green display glass on the left side of the C03 desk mesh, facing +X.
+  computer: { camera: [0.75, 2.1, -2.05], target: [-3.86, 1.82, -2.14] },
 }
 
 export const defaultCamera = { camera: [12, 10, 18.5], target: [0, 1.2, 0] }

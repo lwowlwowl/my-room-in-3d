@@ -60,6 +60,20 @@ export function Scene() {
     return () => { gsap.killTweensOf(camera.position); gsap.killTweensOf(controls.target) }
   }, [active, camera])
 
+  // The computer sits deep on the desk and OrbitControls' minDistance (4.5)
+  // caps how close the dolly can get — pinch the FOV alongside the dolly for
+  // a "lean in" lens zoom so the screen fills the frame. All other focuses
+  // (and the overview) keep the default 40.
+  useEffect(() => {
+    const destFov = active === 'computer' ? 26 : 40
+    gsap.killTweensOf(camera)
+    gsap.to(camera, {
+      fov: destFov, duration: 1.4, ease: 'power3.inOut',
+      onUpdate: () => camera.updateProjectionMatrix(),
+    })
+    return () => { gsap.killTweensOf(camera) }
+  }, [active, camera])
+
   // Hover → pointer cursor
   useEffect(() => {
     const unsub = useStore.subscribe((s) => { gl.domElement.style.cursor = s.hovered ? 'pointer' : 'auto' })
@@ -137,6 +151,9 @@ export function Scene() {
               light pool always follows the bulb sphere position */}
           {/* ② stump-cabinet orb night light */}
           <pointLight position={[-3.1, 2.2, 1.4]} intensity={2.4} distance={5} decay={2} color="#ffd9a3" />
+          {/* ④ computer screen glow — just in front of the green display,
+              which faces into the room along +X. */}
+          <pointLight position={[-3.55, 1.85, -2.15]} intensity={1.1} distance={3.2} decay={2} color="#9fd9a8" />
           {/* ③ signpost cool spotlight — signpost sits at world ≈ (4.4, 1.8, -3.6) */}
           <AimedSpotLight
             position={[6.5, 7, 0.8]}

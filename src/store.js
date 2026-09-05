@@ -20,6 +20,8 @@ export const useStore = create((set) => ({
   night: false,
   // which signpost board is open: 'work' | 'about' | 'contact' | null
   board: null,
+  // whether the computer screen modal is open
+  screen: false,
 
   setActive: (id) => set({ active: id }),
   setHovered: (id) => set({ hovered: id }),
@@ -27,6 +29,7 @@ export const useStore = create((set) => ({
   setRevealed: (revealed) => set({ revealed }),
   setNight: (night) => set({ night }),
   setBoard: (board) => set({ board }),
+  setScreen: (screen) => set({ screen }),
 }))
 
 export const selectActive = (s) => s.active

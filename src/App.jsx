@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { useStore, labelRef } from './store'
 import { Scene } from './components/Scene'
 import { ForestModal } from './components/ForestModal'
+import { ScreenModal } from './components/ScreenModal'
 import { Loader } from './components/Loader'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAmbience, stopAmbience } from './audio'
@@ -15,11 +16,13 @@ const HOVER_LABELS = {
   about: 'About',
   contact: 'Contact',
   lamp: 'Toggle Night Mode',
+  computer: 'My Computer',
 }
 
 export default function App() {
   const active = useStore((s) => s.active)
   const board = useStore((s) => s.board)
+  const screen = useStore((s) => s.screen)
   const hovered = useStore((s) => s.hovered)
   const ready = useStore((s) => s.ready)
   const night = useStore((s) => s.night)
@@ -167,13 +170,15 @@ export default function App() {
       <div className="hint-bar select-none rounded-full bg-white/60 px-4 py-1.5 text-center text-xs font-medium text-woodDark shadow backdrop-blur-md">
         {board
           ? 'Click ✕ or outside the sign to close'
-          : active
-            ? 'Click ✕ or empty space to return'
-            : 'Drag to rotate · Scroll to zoom · Click the signpost to explore'}
+          : screen
+            ? 'Click ✕ or outside the screen to close'
+            : active
+              ? 'Click ✕ or empty space to return'
+              : 'Drag to rotate · Scroll to zoom · Click the signpost or the computer to explore'}
       </div>
 
       {/* Back button */}
-      {active && !board && (
+      {active && !board && !screen && (
         <button
           onClick={() => setActive(null)}
           className="back-btn flex items-center gap-1 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-cream shadow-lg transition hover:scale-105 active:scale-95"
@@ -184,6 +189,9 @@ export default function App() {
 
       {/* Forest modal (signpost boards) */}
       <ForestModal />
+
+      {/* Computer screen modal */}
+      <ScreenModal />
     </>
   )
 }
