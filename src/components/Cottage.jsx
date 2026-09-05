@@ -404,6 +404,68 @@ function ComputerScreen() {
   )
 }
 
+// ---------------------------------------------------------------------------
+// The stump cabinet (C05) in the left corner — a "my collection" drawer.
+// World bbox x[-3.17,0.52] y[0.07,2.87] z[-0.19,3.28], front faces +Z.
+// Click dollies the camera in (focusSpots.stump), then the wooden-drawer
+// modal opens — same rhythm as the computer screen.
+// ---------------------------------------------------------------------------
+const STUMP_HIT = {
+  center: [-1.75, 1.4, 1.85],
+  size: [1.8, 1.6, 2],
+}
+
+function StumpDrawer() {
+  const setHovered = useStore((s) => s.setHovered)
+  const setActive = useStore((s) => s.setActive)
+  const setDrawer = useStore((s) => s.setDrawer)
+  const { camera, size: viewport } = useThree()
+  const hitRef = useRef()
+  const tmp = useRef(new THREE.Vector3())
+  const openTimer = useRef(null)
+
+  useEffect(() => () => clearTimeout(openTimer.current), [])
+
+  useFrame(() => {
+    if (!hitRef.current || !labelRef.current) return
+    const hovered = useStore.getState().hovered === 'stump'
+    if (!hovered) return
+    hitRef.current.localToWorld(tmp.current.set(0, STUMP_HIT.size[1] / 2 + 0.2, 0))
+    const v = tmp.current.project(camera)
+    const el = labelRef.current
+    el.style.left = `${(v.x * 0.5 + 0.5) * viewport.width}px`
+    el.style.top = `${(-v.y * 0.5 + 0.5) * viewport.height}px`
+  })
+
+  return (
+    <>
+      {/* click/hover hitbox over the stump front */}
+      <mesh
+        ref={hitRef}
+        position={STUMP_HIT.center}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered('stump') }}
+        onPointerOut={(e) => { e.stopPropagation(); if (useStore.getState().hovered === 'stump') setHovered(null) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          setActive('stump')
+          clearTimeout(openTimer.current)
+          openTimer.current = setTimeout(() => {
+            if (useStore.getState().active === 'stump') setDrawer(true)
+          }, 650)
+        }}
+      >
+        <boxGeometry args={STUMP_HIT.size} />
+        <meshBasicMaterial
+          transparent
+          opacity={DEBUG_HOTBOXES ? 0.4 : 0}
+          color={DEBUG_HOTBOXES ? '#ffdd44' : undefined}
+          depthWrite={false}
+        />
+      </mesh>
+    </>
+  )
+}
+
 export function CottageFurniture() {
   const { lamp, lampMat, signpostMat } = useCottageParts()
   const setHovered = useStore((s) => s.setHovered)
@@ -442,6 +504,9 @@ export function CottageFurniture() {
 
       {/* Computer on the desk — click zooms to the screen and powers it on */}
       <ComputerScreen />
+
+      {/* Stump cabinet — click pulls out a "my collection" drawer */}
+      <StumpDrawer />
     </>
   )
 }

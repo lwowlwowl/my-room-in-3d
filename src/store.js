@@ -22,6 +22,8 @@ export const useStore = create((set) => ({
   board: null,
   // whether the computer screen modal is open
   screen: false,
+  // whether the stump-cabinet drawer modal is open
+  drawer: false,
 
   setActive: (id) => set({ active: id }),
   setHovered: (id) => set({ hovered: id }),
@@ -30,6 +32,7 @@ export const useStore = create((set) => ({
   setNight: (night) => set({ night }),
   setBoard: (board) => set({ board }),
   setScreen: (screen) => set({ screen }),
+  setDrawer: (drawer) => set({ drawer }),
 }))
 
 export const selectActive = (s) => s.active

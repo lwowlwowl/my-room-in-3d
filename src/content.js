@@ -63,6 +63,38 @@ export const boards = {
   },
 }
 
+// The stump-cabinet drawer — hobbies / keepsakes / skill badges.
+// Edit these placeholders with your own collection.
+export const collections = {
+  title: 'My Collection',
+  sub: '~ tucked in the stump drawer ~',
+  hobbies: {
+    label: 'Hobbies',
+    items: ['Baking', 'Gardening', 'Sketching', 'Hiking', 'Film Photography'],
+  },
+  keepsakes: {
+    label: 'Keepsakes',
+    items: [
+      { name: 'Pressed flower', desc: 'from a spring walk' },
+      { name: 'Film camera', desc: 'grandpa’s old Pentax' },
+      { name: 'Lucky acorn', desc: 'found on the first day of this job' },
+    ],
+  },
+  skills: {
+    label: 'Skill Badges',
+    items: [
+      { short: 'TS', name: 'TypeScript' },
+      { short: 'R3F', name: 'React Three Fiber' },
+      { short: 'GLSL', name: 'Shaders' },
+      { short: 'Vite', name: 'Vite' },
+      { short: 'Node', name: 'Node.js' },
+      { short: 'Bl', name: 'Blender' },
+      { short: 'GSAP', name: 'GSAP' },
+      { short: 'CSS', name: 'CSS' },
+    ],
+  },
+}
+
 // Ordered list of objects that are interactive, with camera focus anchors.
 // anchor = the [x,y,z] the camera moves toward; target = what it looks at.
 // Coordinates match the imported cottagecore GLB (floor at y=0, opening faces +Z).
@@ -72,6 +104,9 @@ export const focusSpots = {
   contact: { camera: [7.4, 4.4, 2.2], target: [4.4, 1.8, -3.6] },
   // Green display glass on the left side of the C03 desk mesh, facing +X.
   computer: { camera: [0.75, 2.1, -2.05], target: [-3.86, 1.82, -2.14] },
+  // Stump cabinet in the left corner, its front faces +Z (toward the room
+  // opening). Drawer front sits around y 1.5-2.0; camera stands in front.
+  stump: { camera: [-1.3, 2.6, 6.4], target: [-1.3, 1.6, 1.6] },
 }
 
 export const defaultCamera = { camera: [12, 10, 18.5], target: [0, 1.2, 0] }

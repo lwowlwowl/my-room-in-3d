@@ -849,3 +849,178 @@
   .screen-window { left: 14px; top: 128px; }
 }
 
+/* ============================================================================
+   STUMP DRAWER MODAL — the stump cabinet's "my collection" drawer: wood
+   front with a handle, deep inside with cubbies (hobbies / keepsakes /
+   skill badges). Slides open like the 3D drawer it belongs to.
+   ============================================================================ */
+
+.drawer-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(38, 46, 30, 0.45) 0%, rgba(20, 26, 16, 0.72) 100%);
+  backdrop-filter: blur(6px);
+  animation: forest-veil-in 0.35s ease both;
+}
+
+/* the drawer box */
+.drawer-box {
+  position: relative;
+  width: min(620px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  border-radius: 22px;
+  animation: drawer-slide-out 0.7s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.55);
+}
+@keyframes drawer-slide-out {
+  0% { transform: translateY(56px) scale(0.92); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* wooden front panel — the drawer face */
+.drawer-front {
+  position: relative;
+  padding: 22px 28px 20px;
+  border-radius: 22px 22px 0 0;
+  background:
+    repeating-linear-gradient(93deg, rgba(70, 45, 25, 0.08) 0 3px, transparent 3px 15px),
+    repeating-linear-gradient(2deg, rgba(255, 230, 190, 0.05) 0 2px, transparent 2px 24px),
+    linear-gradient(172deg, #a97c4e 0%, #96683c 60%, #7d5430 100%);
+  border: 5px solid #6d4c30;
+  border-bottom: none;
+  text-align: center;
+}
+.drawer-title {
+  display: block;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: clamp(24px, 4vw, 32px);
+  color: #f0e2c4;
+  text-shadow: 0 2px 0 rgba(40, 24, 10, 0.8);
+  letter-spacing: 0.03em;
+}
+.drawer-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+  font-size: 14px;
+  color: #d9c49a;
+  letter-spacing: 0.12em;
+}
+/* the round wooden handle on the front */
+.drawer-handle {
+  display: block;
+  width: 64px;
+  height: 12px;
+  margin: 14px auto 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #d8b98a 0%, #a87f52 55%, #77522f 100%);
+  border: 2.5px solid #5c3f24;
+  box-shadow: inset 0 2px 2px rgba(255, 235, 200, 0.4), 0 3px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* deep drawer inside — dark wood cavity with cubbies */
+.drawer-inside {
+  border-radius: 0 0 22px 22px;
+  padding: 18px 20px 22px;
+  background:
+    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.10) 0 2px, transparent 2px 18px),
+    linear-gradient(180deg, #4a3521 0%, #3a2a18 100%);
+  border: 5px solid #6d4c30;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* one cubby */
+.drawer-cubby {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background:
+    repeating-linear-gradient(0deg, rgba(150, 130, 90, 0.05) 0 1px, transparent 1px 26px),
+    linear-gradient(178deg, #f4e9d2 0%, #ead9ba 100%);
+  border: 2px solid rgba(109, 76, 48, 0.4);
+  box-shadow: inset 0 3px 8px rgba(58, 42, 24, 0.25);
+  color: #3a2f25;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+}
+.drawer-cubby-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: 17px;
+  color: #5c4a33;
+  letter-spacing: 0.04em;
+}
+.drawer-cubby-label svg { width: 20px; height: 20px; color: #71975b; }
+
+/* hobbies — wooden tags */
+.drawer-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.drawer-chip {
+  padding: 4px 14px 5px;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #f4eedb;
+  background: linear-gradient(180deg, #8a6240 0%, #77522f 100%);
+  border: 2px solid #5c3f24;
+  box-shadow: inset 0 1px 2px rgba(255, 235, 200, 0.2), 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: rotate(-0.6deg);
+}
+.drawer-chip:nth-child(even) { transform: rotate(0.7deg); }
+
+/* keepsakes — little specimen cards */
+.drawer-keepsake-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.drawer-keepsake-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(178, 141, 94, 0.16);
+  border: 1.5px solid rgba(109, 76, 48, 0.3);
+}
+.drawer-keepsake-name { font-weight: 700; font-size: 16.5px; color: #3a2f25; white-space: nowrap; }
+.drawer-keepsake-desc { font-size: 14.5px; color: #7a6547; font-style: italic; }
+
+/* skills — round badges like carved tokens */
+.drawer-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+.drawer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: 14px;
+  color: #f0e2c4;
+  background: radial-gradient(circle at 34% 28%, #96683c 0%, #77522f 60%, #5c3f24 100%);
+  border: 2.5px solid #4d3520;
+  box-shadow: inset 0 2px 3px rgba(255, 235, 200, 0.25), 0 3px 6px rgba(0, 0, 0, 0.3);
+  cursor: default;
+  transition: transform 0.16s ease;
+}
+.drawer-badge:hover { transform: rotate(-6deg) scale(1.12); }
+
+/* close button rides inside the drawer front's top-right — kept within the
+   box bounds because .drawer-box is a scroll container (overflow-y: auto)
+   that clips anything positioned above it */
+.drawer-close { position: absolute; top: 10px; right: 12px; }
+
+/* small screens: tighter padding */
+@media (max-width: 560px) {
+  .drawer-front { padding: 16px 16px 14px; }
+  .drawer-inside { padding: 14px 12px 16px; }
+  .drawer-badge { width: 40px; height: 40px; font-size: 12px; }
+}
+

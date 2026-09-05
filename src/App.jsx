@@ -6,6 +6,7 @@ import { useStore, labelRef } from './store'
 import { Scene } from './components/Scene'
 import { ForestModal } from './components/ForestModal'
 import { ScreenModal } from './components/ScreenModal'
+import { StumpDrawerModal } from './components/StumpDrawerModal'
 import { Loader } from './components/Loader'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAmbience, stopAmbience } from './audio'
@@ -17,12 +18,14 @@ const HOVER_LABELS = {
   contact: 'Contact',
   lamp: 'Toggle Night Mode',
   computer: 'My Computer',
+  stump: 'My Collection',
 }
 
 export default function App() {
   const active = useStore((s) => s.active)
   const board = useStore((s) => s.board)
   const screen = useStore((s) => s.screen)
+  const drawer = useStore((s) => s.drawer)
   const hovered = useStore((s) => s.hovered)
   const ready = useStore((s) => s.ready)
   const night = useStore((s) => s.night)
@@ -172,13 +175,15 @@ export default function App() {
           ? 'Click ✕ or outside the sign to close'
           : screen
             ? 'Click ✕ or outside the screen to close'
-            : active
-              ? 'Click ✕ or empty space to return'
-              : 'Drag to rotate · Scroll to zoom · Click the signpost or the computer to explore'}
+            : drawer
+              ? 'Click ✕ or outside the drawer to close'
+              : active
+                ? 'Click ✕ or empty space to return'
+                : 'Drag to rotate · Scroll to zoom · Click the signpost, computer, or stump drawer to explore'}
       </div>
 
       {/* Back button */}
-      {active && !board && !screen && (
+      {active && !board && !screen && !drawer && (
         <button
           onClick={() => setActive(null)}
           className="back-btn flex items-center gap-1 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-cream shadow-lg transition hover:scale-105 active:scale-95"
@@ -192,6 +197,9 @@ export default function App() {
 
       {/* Computer screen modal */}
       <ScreenModal />
+
+      {/* Stump-cabinet collection drawer */}
+      <StumpDrawerModal />
     </>
   )
 }
