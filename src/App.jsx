@@ -9,7 +9,7 @@ import { ScreenModal } from './components/ScreenModal'
 import { StumpDrawerModal } from './components/StumpDrawerModal'
 import { Loader } from './components/Loader'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { startAmbience, stopAmbience } from './audio'
+import { startAmbience, stopAmbience, musicState, onAudioChange } from './audio'
 
 // hover labels for the few interactive things (boards + lamp easter egg)
 const HOVER_LABELS = {
@@ -55,11 +55,16 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [setActive])
 
-  // ambience — muted until the user opts in (autoplay policy)
-  const [soundOn, setSoundOn] = useState(false)
+  // ambience — muted until the user opts in (autoplay policy).
+  // The plank's icon reflects the LIVE audio state (musicState): the CottageOS
+  // music app can also start or mute ambience, and both UIs must always agree.
+  // onAudioChange re-renders the plank whenever ANY side flips the audio.
+  const [, setSoundVersion] = useState(0)
+  useEffect(() => onAudioChange(() => setSoundVersion((v) => v + 1)), [])
+  const soundOn = musicState().running
   const toggleSound = () => {
-    if (soundOn) { stopAmbience(); setSoundOn(false) }
-    else { startAmbience(); setSoundOn(true) }
+    if (soundOn) stopAmbience()
+    else startAmbience()
   }
 
   const hoveredLabel = hovered ? HOVER_LABELS[hovered] : ''

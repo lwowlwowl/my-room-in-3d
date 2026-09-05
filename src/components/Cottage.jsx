@@ -61,9 +61,11 @@ function useCottageParts() {
     // enable shadows on every mesh in the glb; disable mesh raycast —
     // these are 100k+ poly Tripo meshes, CPU raycast would freeze pointer
     // events. Interaction is handled by invisible low-poly proxy boxes.
+    // The lamp mesh is exempted from CASTING: its bulb light sits inside the
+    // shade, so a casting shade self-shadows and swallows its own light.
     scene.traverse((o) => {
       if (o.isMesh) {
-        o.castShadow = true
+        o.castShadow = o !== lamp
         o.receiveShadow = true
         o.raycast = () => {}
       }
@@ -157,6 +159,13 @@ function HitProxy({ center, size, debugColor }) {
 // with the vine-bulb flicker aesthetic.
 const LAMP_HEAD = [-3.52, 2.35, -3.32]
 
+// The light sits just OUTSIDE the shade's opening (+Z toward the room), a
+// raycast-measured ~0.3 clear of the mesh — the bulb position itself is only
+// 0.07 from the shade walls, and a pointLight there gets swallowed by its own
+// shade once it casts shadows (self-shadowing black patches + almost no light
+// escaping to the room).
+const LAMP_LIGHT = [-3.52, 2.35, -3.02]
+
 function LampGlow() {
   const mat = useRef()
   const seed = useMemo(() => Math.random() * 10, [])
@@ -167,11 +176,26 @@ function LampGlow() {
     mat.current.color.copy(base).multiplyScalar(f)
   })
   return (
-    <mesh position={LAMP_HEAD}>
-      <sphereGeometry args={[0.15, 16, 16]} />
-      <meshBasicMaterial ref={mat} color={base} toneMapped={false} />
-      <pointLight intensity={6} distance={7} decay={2} color="#ffb459" />
-    </mesh>
+    <>
+      <mesh position={LAMP_HEAD}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshBasicMaterial ref={mat} color={base} toneMapped={false} />
+      </mesh>
+      {/* castShadow makes furniture block the warm pool — the chair throws a
+          REAL shadow pointing AWAY from the lamp at night, instead of the
+          omnidirectional ContactShadows blob that reads as reversed */}
+      <pointLight
+        position={LAMP_LIGHT}
+        intensity={6}
+        distance={7}
+        decay={2}
+        color="#ffb459"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.002}
+        shadow-normalBias={0.02}
+      />
+    </>
   )
 }
 

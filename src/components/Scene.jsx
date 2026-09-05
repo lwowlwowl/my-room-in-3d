@@ -243,9 +243,9 @@ export function Scene() {
         dampingFactor={0.08}
         minDistance={4.5}
         maxDistance={18}
-        minPolarAngle={Math.PI * 0.16}
+        minPolarAngle={Math.PI * 0.285}
         maxPolarAngle={Math.PI * 0.47}
-        minAzimuthAngle={-Math.PI * 0.6}
+        minAzimuthAngle={Math.PI * 0.1}
         maxAzimuthAngle={Math.PI * 0.6}
         target={[0, 1.1, 0]}
       />

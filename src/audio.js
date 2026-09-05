@@ -1,19 +1,21 @@
 // ---------------------------------------------------------------------------
-// Ambience — synthesized breeze bed + a randomly-picked BGM track looping
-// from /public/music/. The AudioContext only starts on a user gesture (the
-// sound toggle plank), per browser autoplay policy. Night mode is hooked for
-// future per-mode tracks but currently plays the same song.
+// Ambience — synthesized breeze bed + a BGM track looping from /public/music/.
+// Track selection now lives in the CottageOS music app (ScreenModal): the
+// player calls nextTrack/prevTrack/togglePlay. The AudioContext only starts
+// on a user gesture (first click inside the music app), per autoplay policy.
 // ---------------------------------------------------------------------------
 
 const TRACKS = [
-  '/music/atlasaudio-emotional-piano-510218.mp3',
-  '/music/prettyjohn1-chill-chill-music-505125.mp3',
+  { src: '/music/atlasaudio-emotional-piano-510218.mp3', name: 'Emotional Piano' },
+  { src: '/music/prettyjohn1-chill-chill-music-505125.mp3', name: 'Chill Chill' },
 ]
 
 let ctx = null
 let master = null
 let bgmGain = null
 let audioEl = null
+let mediaSrc = null
+let trackIndex = Math.floor(Math.random() * TRACKS.length)
 let running = false
 let breezeNodes = null
 
@@ -49,34 +51,139 @@ function startBreeze() {
   breezeNodes = { src, lfo, g }
 }
 
-function startBgm() {
-  // pick a random track; route through Web Audio so volume sits under master
-  const track = TRACKS[Math.floor(Math.random() * TRACKS.length)]
-  audioEl = new Audio(track)
+function loadTrack(i, autoplay = true) {
+  trackIndex = ((i % TRACKS.length) + TRACKS.length) % TRACKS.length
+  if (audioEl) {
+    audioEl.pause()
+    audioEl.onended = null
+    try { audioEl.src = '' } catch {}
+    audioEl = null
+  }
+  audioEl = new Audio(TRACKS[trackIndex].src)
   audioEl.loop = true
   audioEl.crossOrigin = 'anonymous'
-  const src = ctx.createMediaElementSource(audioEl)
-  src.connect(bgmGain)
-  audioEl.play()
+  mediaSrc = ctx.createMediaElementSource(audioEl)
+  mediaSrc.connect(bgmGain)
+  if (autoplay) audioEl.play().catch(() => {}) // AbortError on rapid switches is benign
+}
+
+// muted = the user silenced ambience via the wooden plank (or the music
+// app's own mute toggle). Track switching still updates the selection, but
+// nothing may start playing until unmuted.
+let muted = false
+
+// change notification — React UIs (the sound plank, the music app) subscribe
+// so they can re-render when ANOTHER UI flips the audio state
+const listeners = new Set()
+function notify() {
+  for (const fn of listeners) fn()
+}
+export function onAudioChange(fn) {
+  listeners.add(fn)
+  return () => listeners.delete(fn)
 }
 
 export function startAmbience() {
   ensureContext()
   if (ctx.state === 'suspended') ctx.resume()
-  if (running) return
-  running = true
-  startBreeze()
-  startBgm()
+  muted = false
+  if (!running) {
+    running = true
+    startBreeze()
+    loadTrack(trackIndex)
+  }
+  notify()
+}
+
+// --- CottageOS music-app controls ---------------------------------------
+// All safe before startAmbience(): they ensure the context themselves.
+// They respect `muted`: a muted room only rotates the track selection.
+
+export function nextTrack() {
+  ensureContext()
+  if (!running && !muted) {
+    startAmbience()
+    loadTrack(trackIndex + 1)
+    return
+  }
+  if (muted) {
+    // just move the selection; no sound starts
+    trackIndex = ((trackIndex + 1) % TRACKS.length + TRACKS.length) % TRACKS.length
+    return
+  }
+  if (ctx.state === 'suspended') ctx.resume()
+  if (!running) { running = true; startBreeze() }
+  loadTrack(trackIndex + 1)
+}
+
+export function prevTrack() {
+  ensureContext()
+  if (!running && !muted) {
+    startAmbience()
+    loadTrack(trackIndex - 1)
+    return
+  }
+  if (muted) {
+    trackIndex = ((trackIndex - 1) % TRACKS.length + TRACKS.length) % TRACKS.length
+    return
+  }
+  if (ctx.state === 'suspended') ctx.resume()
+  if (!running) { running = true; startBreeze() }
+  loadTrack(trackIndex - 1)
+}
+
+export function togglePlay() {
+  ensureContext()
+  if (!running || !audioEl) {
+    if (muted) return false
+    startAmbience()
+    return true
+  }
+  if (audioEl.paused) {
+    if (muted) return false
+    if (ctx.state === 'suspended') ctx.resume()
+    audioEl.play()
+    return true
+  }
+  audioEl.pause()
+  return false
+}
+
+export function musicState() {
+  return {
+    running,
+    muted,
+    track: TRACKS[trackIndex].name,
+    trackIndex,
+    count: TRACKS.length,
+    playing: running && audioEl ? !audioEl.paused : false,
+  }
+}
+
+// the music app's own mute toggle — mirrors the wooden plank so both UIs
+// stay in sync (either one can mute or unmute)
+export function toggleMute() {
+  if (muted || !running) {
+    // unmute: same path as the plank's play
+    startAmbience()
+    notify()
+    return false
+  }
+  stopAmbience()
+  notify()
+  return true
 }
 
 export function stopAmbience() {
   running = false
+  muted = true
   if (audioEl) { audioEl.pause(); audioEl = null }
   if (breezeNodes) {
     try { breezeNodes.src.stop(); breezeNodes.lfo.stop() } catch {}
     breezeNodes = null
   }
   if (ctx && ctx.state === 'running') ctx.suspend()
+  notify()
 }
 
 // no day/night music difference for now — kept for future per-mode tracks
@@ -103,5 +210,7 @@ export function ambienceState() {
     level: +Math.sqrt(sum / buf.length).toFixed(4),
     track: audioEl ? audioEl.src.split('/').pop() : null,
     bgmPaused: audioEl ? audioEl.paused : null,
+    trackIndex,
+    trackName: TRACKS[trackIndex].name,
   }
 }

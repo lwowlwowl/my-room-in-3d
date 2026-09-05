@@ -104,9 +104,9 @@ export const focusSpots = {
   contact: { camera: [7.4, 4.4, 2.2], target: [4.4, 1.8, -3.6] },
   // Green display glass on the left side of the C03 desk mesh, facing +X.
   computer: { camera: [0.75, 2.1, -2.05], target: [-3.86, 1.82, -2.14] },
-  // Stump cabinet in the left corner, its front faces +Z (toward the room
-  // opening). Drawer front sits around y 1.5-2.0; camera stands in front.
-  stump: { camera: [-1.3, 2.6, 6.4], target: [-1.3, 1.6, 1.6] },
+  // The three drawers face diagonally toward +X/-Z. This view moves in along
+  // that front direction and frames the full cabinet, instead of its bark side.
+  stump: { camera: [2.7, 2.9, 1.35], target: [-1.3, 1.35, 1.5] },
 }
 
 export const defaultCamera = { camera: [12, 10, 18.5], target: [0, 1.2, 0] }

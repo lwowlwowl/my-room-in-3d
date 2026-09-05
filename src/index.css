@@ -809,6 +809,89 @@
   color: rgba(207, 230, 194, 0.55);
   pointer-events: none;
 }
+
+/* music player app — spinning disc, track name, prev/next buttons */
+.screen-music {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 240px;
+  padding: 18px;
+  font-family: 'Patrick Hand', 'Quicksand', cursive;
+}
+.screen-music-disc {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #cfe6c2 0%, #9fc792 14%, #2a3a22 16%, #1c2a15 100%);
+  border: 3px solid rgba(143, 184, 143, 0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: screen-disc-spin 4.5s linear infinite;
+}
+.screen-music-disc i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #16220f;
+  border: 2.5px solid #9fc792;
+}
+@keyframes screen-disc-spin {
+  to { transform: rotate(360deg); }
+}
+.screen-music-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.screen-music-name {
+  font-family: 'Cabin Sketch', 'Quicksand', cursive;
+  font-weight: 700;
+  font-size: 21px;
+  color: #b7e2a8;
+  letter-spacing: 0.04em;
+}
+.screen-music-sub { font-size: 14px; color: #8fae82; letter-spacing: 0.08em; }
+.screen-music-controls { display: flex; gap: 12px; }
+.screen-music-controls button {
+  width: 52px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(143, 184, 143, 0.55);
+  background: rgba(143, 184, 143, 0.14);
+  color: #cfe6c2;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.screen-music-controls button svg { width: 22px; height: 22px; }
+.screen-music-controls button:hover {
+  background: rgba(143, 184, 143, 0.3);
+  transform: translateY(-2px);
+}
+.screen-music-controls button:active { transform: translateY(0) scale(0.94); }
+.screen-music-controls button.muted {
+  border-color: rgba(201, 111, 95, 0.7);
+  background: rgba(201, 111, 95, 0.22);
+}
+.screen-music-disc.paused { animation-play-state: paused; opacity: 0.7; }
+.screen-music-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: rgba(143, 174, 130, 0.75);
+  letter-spacing: 0.05em;
+  text-align: center;
+}
 .screen-sprout {
   position: absolute;
   pointer-events: none;
