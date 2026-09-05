@@ -29,8 +29,11 @@ const HELLO_LINES = [
 function HelloApp() {
   const [n, setN] = useState(0)
   const [chars, setChars] = useState(0)
+  const [typed, setTyped] = useState('') // real-keyboard input, appended after the intro
+  const introDone = n >= HELLO_LINES.length
+
   useEffect(() => {
-    if (n >= HELLO_LINES.length) return
+    if (introDone) return
     const line = HELLO_LINES[n]
     if (chars < line.length) {
       const t = setTimeout(() => setChars((c) => c + 1), 26)
@@ -38,12 +41,41 @@ function HelloApp() {
     }
     const t = setTimeout(() => { setN((v) => v + 1); setChars(0) }, 320)
     return () => clearTimeout(t)
-  }, [n, chars])
+  }, [n, chars, introDone])
+
+  // real keyboard → the screen: any printable char types into hello.txt,
+  // Backspace erases, Enter starts a fresh "> " line. The intro finishes
+  // first (typing during it just skips the animation to the end).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'Escape') return // handled by the modal's own listener
+      if (e.key === 'Backspace') {
+        setTyped((s) => s.slice(0, -1))
+        return
+      }
+      if (e.key === 'Enter') {
+        setTyped((s) => (s.length ? s + '\n> ' : '> '))
+        return
+      }
+      if (e.key.length === 1 && typed.length < 160) {
+        setTyped((s) => s + e.key)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [typed.length])
+
   return (
     <div className="screen-term">
       {HELLO_LINES.slice(0, n).map((l, i) => <p key={i}>{l}</p>)}
-      {n < HELLO_LINES.length && <p>{HELLO_LINES[n].slice(0, chars)}<span className="screen-caret" /></p>}
-      {n >= HELLO_LINES.length && <p><span className="screen-caret" /></p>}
+      {!introDone && <p>{HELLO_LINES[n].slice(0, chars)}<span className="screen-caret" /></p>}
+      {introDone && (
+        <>
+          <p>{'> ' + typed}<span className="screen-caret" /></p>
+          {typed === '' && <p className="screen-term-hint">(type on your keyboard…)</p>}
+        </>
+      )}
     </div>
   )
 }
@@ -135,7 +167,6 @@ function Desktop() {
         <div className="screen-window">
           <div className="screen-window-bar">
             <span>{app.title}</span>
-            <button type="button" aria-label="Close window" onClick={() => setOpen(null)}>✕</button>
           </div>
           <div className="screen-window-body"><Body /></div>
         </div>

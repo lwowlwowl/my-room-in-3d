@@ -770,6 +770,7 @@
 /* hello.txt terminal */
 .screen-term { padding: 16px 18px; font-family: 'Courier New', ui-monospace, monospace; font-size: 15px; line-height: 1.75; color: #a8d89a; }
 .screen-term p { margin: 0; white-space: pre-wrap; }
+.screen-term-hint { margin-top: 4px; color: rgba(168, 216, 154, 0.45); font-size: 13px; }
 .screen-caret {
   display: inline-block;
   width: 9px;
