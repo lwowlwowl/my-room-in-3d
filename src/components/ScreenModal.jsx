@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { nextTrack, prevTrack, musicState, toggleMute } from '../audio'
+import { boards } from '../content'
 
 // ---------------------------------------------------------------------------
 // The computer screen — a cream-white retro monitor (matching the desk's
@@ -22,16 +23,55 @@ function useClock() {
 const HELLO_LINES = [
   '> hello, wanderer!',
   '> this screen is still growing…',
-  '> for now, plant a little garden',
-  '> (click the soil in the garden app)',
+  '> try `help` to see what it knows',
   '> more to come :)',
 ]
+
+// --- terminal command set -------------------------------------------------
+// Commands are case-insensitive; unknown input gets a gentle hint. Output
+// lines render like the intro lines (screen-term <p>).
+const COMMANDS = {
+  help: () => [
+    'commands:',
+    '  help     — this list',
+    '  whoami   — who lives in this cottage',
+    '  clear    — wipe the terminal',
+    '  day      — sunlight, please',
+    '  night    — lamplight, please',
+  ],
+  whoami: () => {
+    const a = boards.about
+    const intro = Array.isArray(a.intro) ? a.intro : [a.intro]
+    return [
+      ...intro,
+      ...a.meta.map(({ k, v }) => `  ${k}: ${v}`),
+    ]
+  },
+  clear: null, // special-cased in the runner (wipes history instead of printing)
+  day: () => ['opening the curtains… ☀'],
+  night: () => ['lighting the lamp… ⚆'],
+}
+
+function runCommand(raw) {
+  const cmd = raw.trim().toLowerCase()
+  if (!cmd) return []
+  if (cmd === 'clear') return ['__CLEAR__']
+  const fn = COMMANDS[cmd]
+  if (fn) return fn()
+  return [
+    `cottage: unknown command '${raw.trim()}'`,
+    "(try 'help')",
+  ]
+}
 
 function HelloApp() {
   const [n, setN] = useState(0)
   const [chars, setChars] = useState(0)
-  const [typed, setTyped] = useState('') // real-keyboard input, appended after the intro
+  const [typed, setTyped] = useState('') // current input line, after the intro
+  const [history, setHistory] = useState([]) // printed lines: echoes + command output
   const introDone = n >= HELLO_LINES.length
+  const setNight = useStore((s) => s.setNight)
+  const night = useStore((s) => s.night)
 
   useEffect(() => {
     if (introDone) return
@@ -44,37 +84,52 @@ function HelloApp() {
     return () => clearTimeout(t)
   }, [n, chars, introDone])
 
-  // real keyboard → the screen: any printable char types into hello.txt,
-  // Backspace erases, Enter starts a fresh "> " line. The intro finishes
-  // first (typing during it just skips the animation to the end).
+  // real keyboard → the screen: printable chars type into the current line,
+  // Backspace erases, Enter runs the line as a command (or just echoes it).
+  // The intro finishes first (typing during it just skips the animation).
   useEffect(() => {
     const onKey = (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === 'Escape') return // handled by the modal's own listener
+      if (!introDone) { setN(HELLO_LINES.length); return }
       if (e.key === 'Backspace') {
         setTyped((s) => s.slice(0, -1))
         return
       }
       if (e.key === 'Enter') {
-        setTyped((s) => (s.length ? s + '\n> ' : '> '))
+        const echo = '> ' + typed
+        const out = runCommand(typed)
+        if (out.includes('__CLEAR__')) {
+          setHistory([])
+        } else {
+          setHistory((h) => [...h.slice(-60), echo, ...out])
+        }
+        // side effects
+        const cmd = typed.trim().toLowerCase()
+        if (cmd === 'day' && night) setNight(false)
+        if (cmd === 'night' && !night) setNight(true)
+        setTyped('')
         return
       }
-      if (e.key.length === 1 && typed.length < 160) {
+      if (e.key.length === 1 && typed.length < 80) {
         setTyped((s) => s + e.key)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [typed.length])
+  }, [typed, introDone, night, setNight])
 
   return (
     <div className="screen-term">
-      {HELLO_LINES.slice(0, n).map((l, i) => <p key={i}>{l}</p>)}
+      {HELLO_LINES.slice(0, n).map((l, i) => <p key={`i${i}`}>{l}</p>)}
       {!introDone && <p>{HELLO_LINES[n].slice(0, chars)}<span className="screen-caret" /></p>}
       {introDone && (
         <>
+          {history.map((l, i) => <p key={`h${i}`}>{l}</p>)}
           <p>{'> ' + typed}<span className="screen-caret" /></p>
-          {typed === '' && <p className="screen-term-hint">(type on your keyboard…)</p>}
+          {typed === '' && history.length === 0 && (
+            <p className="screen-term-hint">(type on your keyboard — try `help`)</p>
+          )}
         </>
       )}
     </div>
