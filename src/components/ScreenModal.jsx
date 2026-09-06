@@ -308,7 +308,6 @@ export function ScreenModal() {
           <i className="screen-chin-led" aria-hidden="true" />
           <span>cottage&nbsp;·&nbsp;puter</span>
         </div>
-        <div className="screen-stand" aria-hidden="true"><i /><i /><i /></div>
       </div>
     </div>
   )

@@ -1,41 +1,70 @@
-import { useEffect, useRef, useMemo } from 'react'
-import { OrbitControls, SoftShadows, ContactShadows, Sparkles } from '@react-three/drei'
+import { useEffect, useRef, useMemo, forwardRef } from 'react'
+import { OrbitControls, ContactShadows, Sparkles } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette, BrightnessContrast, Noise } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { useThree, useFrame } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import * as THREE from 'three'
-import { useStore } from '../store'
+import { useStore, nightBlendRef } from '../store'
 import { focusSpots, defaultCamera } from '../content'
 import { CottageShell, CottageFurniture } from './Cottage'
 
 // SpotLight whose target is properly mounted in the scene graph — a bare
 // `target-position` prop does NOT work in R3F (the target object never gets
 // its matrixWorld updated, so the light keeps aiming at the origin).
-function AimedSpotLight({ position, target, ...props }) {
-  const light = useRef()
+const AimedSpotLight = forwardRef(function AimedSpotLight({ position, target, ...props }, ref) {
   const targetObj = useMemo(() => new THREE.Object3D(), [])
   useEffect(() => {
-    if (light.current) light.current.target = targetObj
-  }, [targetObj])
+    if (ref?.current) ref.current.target = targetObj
+  }, [targetObj, ref])
   return (
     <>
       <primitive object={targetObj} position={target} />
-      <spotLight ref={light} position={position} {...props} />
+      <spotLight ref={ref} position={position} {...props} />
     </>
   )
-}
+})
+
+const DAY_BG = '#241d16'
+const NIGHT_BG = '#0b1122'
+
+// Crossfade table: [refKey, dayIntensity, nightIntensity]. Every light in both
+// rigs is ALWAYS mounted; useFrame drives each intensity from nightBlendRef,
+// so flipping `night` eases the whole scene through a dusk-like midpoint
+// instead of hard-swapping.
+const RIG = [
+  ['dayHemi', 0.55, 0],
+  ['dayAmb', 0.18, 0],
+  ['sun', 2.2, 0],
+  ['dayDirFill', 0.35, 0],
+  ['dayFill1', 0.5, 0],
+  ['dayFill2', 0.5, 0],
+  ['dayFill3', 0.35, 0],
+  ['dayFill4', 0.3, 0],
+  ['nightHemi', 0, 0.25],
+  ['nightAmb', 0, 0.08],
+  ['moon', 0, 0.55],
+  ['stumpOrb', 0, 1.3],
+  ['screenGlow', 0, 1.1],
+  ['signpostSpot', 0, 2.8],
+  ['nightFill', 0, 1.2],
+]
 
 export function Scene() {
   const controlsRef = useRef()
   const worldRef = useRef() // whole room — used for pointer parallax
   const shellRef = useRef() // room shell (walls/floor) — intro scale target
   const furnitureRef = useRef() // furniture wrapper — intro stagger targets
-  const { camera, gl } = useThree()
+  const rigRefs = useRef({}) // both light rigs — intensity crossfade targets
+  const { camera, gl, scene } = useThree()
   const active = useStore((s) => s.active)
   const revealed = useStore((s) => s.revealed)
   const night = useStore((s) => s.night)
   const setReady = useStore((s) => s.setReady)
+
+  const setRigRef = (key) => (el) => { rigRefs.current[key] = el }
+  const bgDay = useMemo(() => new THREE.Color(DAY_BG), [])
+  const bgNight = useMemo(() => new THREE.Color(NIGHT_BG), [])
 
   // Enable physically-correct lighting + ACES tone mapping for a cinematic look.
   useEffect(() => {
@@ -44,6 +73,38 @@ export function Scene() {
     gl.shadowMap.enabled = true
     gl.shadowMap.type = THREE.PCFSoftShadowMap
   }, [gl])
+
+  // Day/night crossfade: tween the shared blend value, and drive every rig
+  // light + background/fog colors from it each frame (see useFrame below).
+  useEffect(() => {
+    nightBlendRef.current = night ? 1 : 0
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    gsap.killTweensOf(nightBlendRef)
+    gsap.to(nightBlendRef, {
+      current: night ? 1 : 0,
+      duration: 1.6,
+      ease: 'power2.inOut',
+    })
+  }, [night])
+
+  // Per-frame crossfade — light intensities, visibility (skips shadow-map
+  // rendering for lights pinned at 0), background, fog, and tone-mapping
+  // exposure (night reads best slightly brighter to keep the shadows airy).
+  const bgTmp = useMemo(() => new THREE.Color(), [])
+  useFrame(() => {
+    const b = nightBlendRef.current
+    for (const [key, dayI, nightI] of RIG) {
+      const l = rigRefs.current[key]
+      if (!l) continue
+      l.intensity = THREE.MathUtils.lerp(dayI, nightI, b)
+      // lights that are 0 at one end should not render their shadow map
+      l.visible = l.intensity > 0.01 || (dayI > 0 && nightI > 0)
+    }
+    bgTmp.copy(bgDay).lerp(bgNight, b)
+    scene.background = bgTmp
+    scene.fog.color.copy(bgTmp)
+  })
 
   // Camera + controls tween on focus change.
   useEffect(() => {
@@ -122,84 +183,97 @@ export function Scene() {
 
   return (
     <>
-      <color attach="background" args={[night ? '#0b1122' : '#241d16']} />
-      <fog attach="fog" args={[night ? '#0b1122' : '#241d16', 16, 40]} />
+      {/* Background + fog colors are written per-frame from nightBlendRef
+          (see the crossfade useFrame above) — no JSX color needed. */}
+      <fog attach="fog" args={[DAY_BG, 16, 40]} />
 
-      {/* Soft shadow kernel — blurs shadow edges for a natural look */}
-      <SoftShadows size={28} samples={16} focus={0.6} />
+      {/* ===== DAY RIG — warm "baked" lighting (crossfaded out at night) ===== */}
+      <hemisphereLight ref={setRigRef('dayHemi')} args={['#fff0d8', '#5a4030']} />
+      <ambientLight ref={setRigRef('dayAmb')} color="#ffe8cc" />
 
-      {night ? (
-        <>
-          {/* ===== NIGHT RIG — replicated from blender night_scene.py ===== */}
-          <hemisphereLight args={['#1a2340', '#05070d', 0.25]} />
-          <ambientLight intensity={0.08} color="#33406b" />
+      <directionalLight
+        ref={setRigRef('sun')}
+        position={[7, 11, 5]}
+        color="#ffd9a0"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0003}
+        shadow-normalBias={0.02}
+        shadow-camera-near={0.5}
+        shadow-camera-far={30}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-radius={6}
+      >
+        <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 30]} />
+      </directionalLight>
 
-          {/* Moon — cool key light from upper-front-right */}
-          <directionalLight
-            position={[8, 12, 9]}
-            intensity={0.55}
-            color="#8ca3ff"
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-            shadow-bias={-0.0003}
-            shadow-normalBias={0.02}
-          >
-            <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 40]} />
-          </directionalLight>
+      <directionalLight ref={setRigRef('dayDirFill')} position={[-5, 4, -7]} color="#a8c4d8" />
+      <pointLight ref={setRigRef('dayFill1')} position={[0, 4.5, 0.6]} color="#7ec0d8" distance={5} decay={2} />
+      <pointLight ref={setRigRef('dayFill2')} position={[-4, 5.5, 1]} color="#ffc888" distance={7} decay={2} />
+      <pointLight ref={setRigRef('dayFill3')} position={[0, 6.5, -4.5]} color="#ffe4c0" distance={8} decay={2} />
+      <pointLight ref={setRigRef('dayFill4')} position={[4.5, 5.5, 1]} color="#ffdca0" distance={6} decay={2} />
 
-          {/* ① desk lamp warm glow lives INSIDE LampGlow (Cottage.jsx) so the
-              light pool always follows the bulb sphere position */}
-          {/* ② stump-cabinet orb night light */}
-          <pointLight position={[-3.1, 2.2, 1.4]} intensity={2.4} distance={5} decay={2} color="#ffd9a3" />
-          {/* ④ computer screen glow — just in front of the green display,
-              which faces into the room along +X. */}
-          <pointLight position={[-3.55, 1.85, -2.15]} intensity={1.1} distance={3.2} decay={2} color="#9fd9a8" />
-          {/* ③ signpost cool spotlight — signpost sits at world ≈ (4.4, 1.8, -3.6) */}
-          <AimedSpotLight
-            position={[6.5, 7, 0.8]}
-            target={[4.4, 1.8, -3.6]}
-            angle={0.7}
-            penumbra={0.7}
-            intensity={5}
-            distance={9}
-            decay={2}
-            color="#b8c6ff"
-          />
-          {/* faint interior fill so corners never go pure black */}
-          <pointLight position={[0.5, 6.3, 0]} intensity={1.2} distance={12} decay={2} color="#c9c2e8" />
-        </>
-      ) : (
-        <>
-          {/* ===== DAY RIG — warm "baked" lighting ===== */}
-          <hemisphereLight args={['#fff0d8', '#5a4030', 0.55]} />
-          <ambientLight intensity={0.18} color="#ffe8cc" />
+      {/* ===== NIGHT RIG — replicated from blender night_scene.py ===== */}
+      <hemisphereLight ref={setRigRef('nightHemi')} args={['#1a2340', '#05070d']} />
+      <ambientLight ref={setRigRef('nightAmb')} color="#33406b" />
 
-          <directionalLight
-            position={[7, 11, 5]}
-            intensity={2.2}
-            color="#ffd9a0"
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-            shadow-bias={-0.0003}
-            shadow-normalBias={0.02}
-            shadow-camera-near={0.5}
-            shadow-camera-far={30}
-            shadow-camera-left={-10}
-            shadow-camera-right={10}
-            shadow-camera-top={10}
-            shadow-camera-bottom={-10}
-            shadow-radius={6}
-          >
-            <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 30]} />
-          </directionalLight>
+      {/* Moon — cool key light from upper-front-right */}
+      <directionalLight
+        ref={setRigRef('moon')}
+        position={[8, 12, 9]}
+        color="#8ca3ff"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0003}
+        shadow-normalBias={0.02}
+      >
+        <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10, 0.5, 40]} />
+      </directionalLight>
 
-          <directionalLight position={[-5, 4, -7]} intensity={0.35} color="#a8c4d8" />
-          <pointLight position={[0, 4.5, 0.6]} intensity={0.5} color="#7ec0d8" distance={5} decay={2} />
-          <pointLight position={[-4, 5.5, 1]} intensity={0.5} color="#ffc888" distance={7} decay={2} />
-          <pointLight position={[0, 6.5, -4.5]} intensity={0.35} color="#ffe4c0" distance={8} decay={2} />
-          <pointLight position={[4.5, 5.5, 1]} intensity={0.3} color="#ffdca0" distance={6} decay={2} />
-        </>
-      )}
+      {/* ① desk lamp warm glow lives INSIDE LampGlow (Cottage.jsx) so the
+          light pool always follows the bulb sphere position */}
+      {/* ② stump-cabinet orb night light — on the glass ball next to the
+          stump. castShadow gives nearby books real shadows; the light sits
+          just ABOVE the ball (same lesson as the desk lamp: a shadow-casting
+          pointLight inside a mesh self-shadows and swallows its own glow). */}
+      <pointLight
+        ref={setRigRef('stumpOrb')}
+        name="dbg:stumpOrb"
+        position={[-1.9, 2.75, 1.4]}
+        distance={5}
+        decay={2}
+        color="#ffd9a3"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.002}
+        shadow-normalBias={0.02}
+      />
+      {/* ④ computer screen glow — just in front of the green display,
+          which faces into the room along +X. */}
+      <pointLight ref={setRigRef('screenGlow')} name="dbg:screenGlow" position={[-3.55, 1.85, -2.15]} distance={3.2} decay={2} color="#9fd9a8" />
+      {/* ③ signpost fill — the signpost sits at world ≈ (4.4, 1.8, -3.6).
+          Keep the cone on its boards so its shared grass-and-stone base
+          stays in the same moonlit range as the surrounding ground. */}
+      <AimedSpotLight
+        ref={setRigRef('signpostSpot')}
+        name="dbg:signpostSpot"
+        position={[5.6, 4.8, -0.4]}
+        target={[4.4, 1.85, -3.6]}
+        angle={0.38}
+        penumbra={0.65}
+        distance={6}
+        decay={2}
+        color="#ccd5f2"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.002}
+        shadow-normalBias={0.02}
+      />
+      {/* faint interior fill so corners never go pure black */}
+      <pointLight ref={setRigRef('nightFill')} name="dbg:nightFill" position={[0.5, 6.3, 0]} distance={12} decay={2} color="#c9c2e8" />
 
       {/* World group — pointer-parallax tilt applies to everything inside */}
       <group ref={worldRef}>

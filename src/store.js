@@ -6,6 +6,12 @@ import { create } from 'zustand'
 // without triggering a re-render. Only `hovered`/`active` go through state.
 export const labelRef = { current: null }
 
+// Day→night crossfade progress (0 = full day, 1 = full night). Plain mutable
+// holder like labelRef: Scene.jsx tweens it with GSAP over ~1.6s whenever
+// `night` flips, and per-frame consumers (light intensities, glow materials,
+// background/fog colors) read it without triggering React re-renders.
+export const nightBlendRef = { current: 0 }
+
 export const useStore = create((set) => ({
   // id of the focused object, or null for overview
   active: null,

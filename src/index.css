@@ -607,13 +607,13 @@
   border-radius: 11px 0 0 0;
 }
 
-/* monitor chin + wood stand */
+/* monitor chin: a quiet, integrated badge instead of a decorative stand */
 .screen-chin {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 0 6px;
+  padding: 10px 0 15px;
   font-family: 'Patrick Hand', 'Quicksand', cursive;
   font-size: 13px;
   letter-spacing: 0.22em;
@@ -632,23 +632,6 @@
   0%, 100% { box-shadow: 0 0 4px rgba(140, 220, 120, 0.55); }
   50% { box-shadow: 0 0 9px rgba(140, 220, 120, 0.95); }
 }
-.screen-stand {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 3px;
-  padding-bottom: 16px;
-}
-.screen-stand i {
-  display: block;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #e9dfc6 0%, #cdbb92 100%);
-  border: 2px solid #b9a67f;
-}
-.screen-stand i:nth-child(1) { width: 46px; height: 13px; }
-.screen-stand i:nth-child(2) { width: 64px; height: 7px; }
-.screen-stand i:nth-child(3) { width: 96px; height: 5px; }
-
 /* ——— CottageOS desktop ——— */
 .screen-desktop {
   position: relative;

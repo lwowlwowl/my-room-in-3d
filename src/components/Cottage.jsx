@@ -1,9 +1,8 @@
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, Text } from '@react-three/drei'
-import { gsap } from 'gsap'
 import * as THREE from 'three'
-import { useStore, labelRef } from '../store'
+import { useStore, labelRef, nightBlendRef } from '../store'
 
 // ---------------------------------------------------------------------------
 // Cottagecore diorama — imported from blender/test1.blend (user's layout).
@@ -90,7 +89,9 @@ function useCottageParts() {
     // (see NightGlow below) — kept at 0 here so day mode is untouched.
     const emissiveSetup = [
       [lampMat, '#ffb459'],
-      [signpostMat, '#b8c8e8'],
+      // The signpost mesh also contains its base stones and grass, so keep
+      // its shared emissive tint muted and neutral at night.
+      [signpostMat, '#7d8aa8'],
     ]
     for (const [m, color] of emissiveSetup) {
       if (m && m.map && !m.emissiveMap) {
@@ -106,16 +107,16 @@ function useCottageParts() {
 
 export function CottageShell() {
   const { shell, bulbMats } = useCottageParts()
-  const night = useStore((s) => s.night)
   const flickerSeeds = useMemo(() => Array.from({ length: 12 }, () => Math.random() * 10), [])
   const baseEmissive = useMemo(() => bulbMats.map((m) => m.emissiveIntensity ?? 1), [bulbMats])
 
   useFrame(({ clock }) => {
     if (!bulbMats.length) return
     const t = clock.elapsedTime
+    const nightBoost = THREE.MathUtils.lerp(1, 2.4, nightBlendRef.current)
     for (let i = 0; i < bulbMats.length; i++) {
       const f = 0.85 + 0.15 * Math.sin(t * 7 + flickerSeeds[i % flickerSeeds.length])
-      bulbMats[i].emissiveIntensity = (baseEmissive[i] || 1) * (night ? 2.4 : 1) * f
+      bulbMats[i].emissiveIntensity = (baseEmissive[i] || 1) * nightBoost * f
     }
   })
 
@@ -134,7 +135,95 @@ export function CottageShell() {
 // the group that is already offset by FLOOR_OFFSET, so add 3.16 back on y.
 // DEBUG_HOTBOXES=true paints every interactive box in its own color so the
 // hover regions are visible while tuning coordinates — set false to hide.
-const DEBUG_HOTBOXES = false
+const DEBUG_HOTBOXES = true
+
+// DEBUG_COORDS=true overlays the world coordinate system for tuning:
+//   • red/green/blue arrows = world X/Y/Z axes from the origin (1 unit = 1m)
+//   • ground grid, 1m cells
+//   • yellow markers = this file's constants (COMPUTER_HIT etc.) — they
+//     REFERENCE the constants, so editing the constant moves the marker
+//   • cyan markers = Scene.jsx rig lights — they track the live object each
+//     frame via `name="dbg:*"`, so editing a light's position in Scene.jsx
+//     moves the marker immediately
+const DEBUG_COORDS = true
+
+// Live tracker: positions the marker on an object found by name every frame.
+// Use for anything defined OUTSIDE this file (Scene.jsx lights) — no stale
+// copies. Lights sit at the scene root while this marker lives inside the
+// parallax-tilted world group, so under pointer tilt there is a tiny (<1°)
+// offset — irrelevant for tuning.
+function LiveMarker({ target, label }) {
+  const g = useRef()
+  const { scene } = useThree()
+  const tmp = useMemo(() => new THREE.Vector3(), [])
+  useFrame(() => {
+    const o = scene.getObjectByName(target)
+    if (o && g.current) g.current.position.copy(o.getWorldPosition(tmp))
+  })
+  return (
+    <group ref={g}>
+      <mesh>
+        <sphereGeometry args={[0.08, 12, 12]} />
+        <meshBasicMaterial color="#44ddff" depthTest={false} />
+      </mesh>
+      <Text
+        fontSize={0.22}
+        color="#aee7ff"
+        outlineWidth={0.015}
+        outlineColor="#000000"
+        position={[0, 0.35, 0]}
+        anchorX="center"
+      >
+        {label}
+      </Text>
+    </group>
+  )
+}
+
+function DebugCoords() {
+  if (!DEBUG_COORDS) return null
+  // references the CONSTANTS (not copies) — evaluated at render time, after
+  // they are defined below in this module
+  const landmarks = [
+    ['origin (0,0,0)', [0, 0, 0]],
+    ['COMPUTER_HIT', COMPUTER_HIT.center],
+    ['STUMP_HIT', STUMP_HIT.center],
+    ['LAMP_HEAD', LAMP_HEAD],
+    ['LAMP_LIGHT', LAMP_LIGHT],
+    ['WINDOW', WINDOW_CENTER],
+  ]
+  return (
+    <group>
+      {/* world axes: X red, Y green, Z blue */}
+      <axesHelper args={[3]} />
+      <gridHelper args={[16, 16, '#cc6644', '#445566']} position={[0, 0.03, 0]} />
+      {landmarks.map(([name, pos]) => (
+        <group key={name} position={pos}>
+          <mesh>
+            <sphereGeometry args={[0.08, 12, 12]} />
+            <meshBasicMaterial color="#ffdd44" depthTest={false} />
+          </mesh>
+          <Text
+            fontSize={0.22}
+            color="#ffffff"
+            outlineWidth={0.015}
+            outlineColor="#000000"
+            position={[0, 0.35, 0]}
+            anchorX="center"
+            renderOrder={999}
+          >
+            {name}
+          </Text>
+        </group>
+      ))}
+      {/* Scene.jsx night-rig lights — tracked live by name */}
+      <LiveMarker target="dbg:stumpOrb" label="stumpOrb" />
+      <LiveMarker target="dbg:screenGlow" label="screenGlow" />
+      <LiveMarker target="dbg:signpostSpot" label="signpostSpot" />
+      <LiveMarker target="dbg:nightFill" label="nightFill" />
+    </group>
+  )
+}
 
 function HitProxy({ center, size, debugColor }) {
   return (
@@ -168,25 +257,33 @@ const LAMP_LIGHT = [-3.52, 2.35, -3.02]
 
 function LampGlow() {
   const mat = useRef()
+  const light = useRef()
   const seed = useMemo(() => Math.random() * 10, [])
   const base = useMemo(() => new THREE.Color(2.6, 1.8, 0.95), [])
   useFrame(({ clock }) => {
-    if (!mat.current) return
-    const f = 0.86 + 0.14 * Math.sin(clock.elapsedTime * 7 + seed)
-    mat.current.color.copy(base).multiplyScalar(f)
+    const b = nightBlendRef.current
+    if (mat.current) {
+      // keep the HDR color constant and fade OPACITY with the blend —
+      // scaling the color down left an opaque BLACK sphere in full day
+      const f = 0.86 + 0.14 * Math.sin(clock.elapsedTime * 7 + seed)
+      mat.current.color.copy(base).multiplyScalar(f)
+      mat.current.opacity = b
+    }
+    if (light.current) light.current.intensity = 6 * b
   })
   return (
     <>
       <mesh position={LAMP_HEAD}>
         <sphereGeometry args={[0.15, 16, 16]} />
-        <meshBasicMaterial ref={mat} color={base} toneMapped={false} />
+        <meshBasicMaterial ref={mat} color={base} toneMapped={false} transparent />
       </mesh>
       {/* castShadow makes furniture block the warm pool — the chair throws a
           REAL shadow pointing AWAY from the lamp at night, instead of the
-          omnidirectional ContactShadows blob that reads as reversed */}
+          omnidirectional ContactShadows blob that reads as reversed.
+          Intensity rides the night blend so the warm pool fades in/out. */}
       <pointLight
+        ref={light}
         position={LAMP_LIGHT}
-        intensity={6}
         distance={7}
         decay={2}
         color="#ffb459"
@@ -211,7 +308,6 @@ const BOARD_LABELS = [
 ]
 
 function SignpostNightText({ bb }) {
-  const night = useStore((s) => s.night)
   const group = useRef()
   // board face normal = signpost baked yaw + 90° (local +X rotated into world)
   const yaw = useMemo(() => {
@@ -219,35 +315,48 @@ function SignpostNightText({ bb }) {
     return e.y + Math.PI / 2
   }, [])
   const dir = useMemo(() => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), [yaw])
-  // HDR color pushes the glyphs past the bloom threshold (troika's material
-  // deletes .color when the mesh color prop is null — set it via the prop)
-  const glowColor = useMemo(() => new THREE.Color(2.1, 1.55, 0.9), [])
+  // HDR color pushes the glyphs past the bloom threshold. Each board gets its
+  // own MUTABLE color instance as the prop — troika re-copies it into the
+  // material every render, so mutating it per frame drives the glow.
+  const GLOW = new THREE.Color(2.1, 1.55, 0.9)
+  const labelColors = useMemo(() => BOARD_LABELS.map(() => new THREE.Color(2.1, 1.55, 0.9)), [])
 
-  useEffect(() => {
-    if (!night || !group.current) return
-    const mats = []
-    group.current.traverse((o) => { if (o.material) mats.push(o.material) })
-    mats.forEach((m) => {
-      if ('toneMapped' in m) m.toneMapped = false
-      m.transparent = true
-      m.opacity = 0
-      m.needsUpdate = true
+  // Always mounted; the fade rides the night blend with a small stagger so the
+  // boards still light up one at a time during the crossfade. NOTE: troika's
+  // `material` GETTER returns an ARRAY [outlineMaterial, fillMaterial] when
+  // outlineWidth is set — writing `.opacity` on that array touches nothing.
+  // Write to the real materials (the outline material prototypally inherits
+  // from the fill material, so setting the fill's props covers both). Opacity
+  // alone fades too back-loaded (the HDR color keeps glyphs blooming until
+  // near-zero), so the COLOR is dimmed in step — sqrt so it leads slightly.
+  const textRefs = useRef([])
+  useFrame(() => {
+    const b = nightBlendRef.current
+    if (group.current) group.current.visible = b > 0.001
+    textRefs.current.forEach((t, i) => {
+      if (!t || !t.material) return
+      // each board starts fading a bit later: stagger window 0..0.3 of the blend
+      const s = THREE.MathUtils.clamp((b - i * 0.12) / 0.7, 0, 1)
+      labelColors[i].copy(GLOW).multiplyScalar(Math.sqrt(s))
+      const mats = Array.isArray(t.material) ? t.material : [t.material]
+      for (const m of mats) {
+        if (!m) continue
+        if ('toneMapped' in m) m.toneMapped = false
+        m.transparent = true
+        m.opacity = s
+      }
     })
-    // staggered fade-in, one board at a time
-    const tl = gsap.timeline()
-    mats.forEach((m, i) => tl.to(m, { opacity: 1, duration: 0.9, delay: 0.15 + i * 0.22 }, 0))
-    return () => tl.kill()
-  }, [night])
+  })
 
-  if (!night) return null
   const fontSize = bb.h * 0.085
   return (
     <group ref={group}>
-      {BOARD_LABELS.map(({ id, label, h, dx, dy, dz }) => (
+      {BOARD_LABELS.map(({ id, label, h, dx, dy, dz }, i) => (
         <Text
           key={id}
+          ref={(el) => { textRefs.current[i] = el }}
           font="/fonts/CabinSketch-Bold.ttf"
-          color={glowColor}
+          color={labelColors[i]}
           position={[bb.cx + dir.x * 0.45 + dx, bb.base + h * bb.h + dy, bb.cz + dir.z * 0.3 + dz]}
           rotation={[0, yaw, 0]}
           fontSize={fontSize}
@@ -356,8 +465,10 @@ function SignpostHit({ boardId, center, size, debugColor, camera, viewport, tmp 
 const WINDOW_CENTER = [-3.9, 3.9, 1.2]
 
 function WindowMoonlight() {
+  const light = useRef()
+  useFrame(() => { if (light.current) light.current.intensity = 0.6 * nightBlendRef.current })
   return (
-    <pointLight position={[WINDOW_CENTER[0] - 0.1, WINDOW_CENTER[1] + 0.3, WINDOW_CENTER[2] - 0.4]} intensity={0.6} distance={5} decay={2} color="#aebfff" />
+    <pointLight ref={light} position={[WINDOW_CENTER[0] - 0.1, WINDOW_CENTER[1] + 0.3, WINDOW_CENTER[2] - 0.4]} distance={5} decay={2} color="#aebfff" />
   )
 }
 
@@ -494,14 +605,15 @@ export function CottageFurniture() {
   const { lamp, lampMat, signpostMat } = useCottageParts()
   const setHovered = useStore((s) => s.setHovered)
   const setNight = useStore((s) => s.setNight)
-  const night = useStore((s) => s.night)
 
-  // Night mode: lamp body gets a warm glow, signpost wood a faint moonlight
-  // (both are texture-modulated — see useCottageParts' emissiveMap setup).
-  useEffect(() => {
-    if (lampMat) lampMat.emissiveIntensity = night ? 1.1 : 0
-    if (signpostMat) signpostMat.emissiveIntensity = night ? 0.4 : 0
-  }, [night, lampMat, signpostMat])
+  // Night mode: the lamp retains its warm glow. The signpost shares a mesh
+  // with its stones and grass, so its texture-modulated fill stays subtle.
+  // Both emissive intensities ride the night blend (crossfade, not a swap).
+  useFrame(() => {
+    const b = nightBlendRef.current
+    if (lampMat) lampMat.emissiveIntensity = 1.1 * b
+    if (signpostMat) signpostMat.emissiveIntensity = 0.1 * b
+  })
 
   return (
     <>
@@ -517,11 +629,12 @@ export function CottageFurniture() {
         </group>
       )}
 
-      {/* Lit bulb at the lamp shade (night only) */}
-      {night && <LampGlow />}
+      {/* Lit bulb at the lamp shade — always mounted, intensity rides the
+          night crossfade (0 in full day) */}
+      <LampGlow />
 
-      {/* Moonlight glow through the window (night only, always on) */}
-      {night && <WindowMoonlight />}
+      {/* Moonlight glow through the window — same crossfade treatment */}
+      <WindowMoonlight />
 
       {/* Signpost — three clickable boards (hitboxes measured at runtime) */}
       <SignpostBoards />
@@ -531,6 +644,9 @@ export function CottageFurniture() {
 
       {/* Stump cabinet — click pulls out a "my collection" drawer */}
       <StumpDrawer />
+
+      {/* World coordinate system overlay — DEBUG_COORDS (see above) */}
+      <DebugCoords />
     </>
   )
 }
