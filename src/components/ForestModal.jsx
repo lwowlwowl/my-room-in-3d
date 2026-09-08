@@ -162,7 +162,7 @@ function ContactBody({ data }) {
       <p className="forest-intro forest-intro-center">{data.intro}</p>
       <div className="forest-links">
         {data.links.map((l, i) => (
-          <a key={i} className="forest-link" href={l.href} aria-label={l.k} title={l.v}>
+          <a key={i} className="forest-link" href={l.href} target="_blank" rel="noopener noreferrer" aria-label={l.k} title={l.v}>
             <Icon name={l.icon} className="forest-link-icon" />
             <span className="forest-link-label">{l.k}</span>
           </a>

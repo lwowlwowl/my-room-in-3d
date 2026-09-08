@@ -135,7 +135,7 @@ export function CottageShell() {
 // the group that is already offset by FLOOR_OFFSET, so add 3.16 back on y.
 // DEBUG_HOTBOXES=true paints every interactive box in its own color so the
 // hover regions are visible while tuning coordinates — set false to hide.
-const DEBUG_HOTBOXES = true
+const DEBUG_HOTBOXES = false
 
 // DEBUG_COORDS=true overlays the world coordinate system for tuning:
 //   • red/green/blue arrows = world X/Y/Z axes from the origin (1 unit = 1m)
@@ -145,7 +145,7 @@ const DEBUG_HOTBOXES = true
 //   • cyan markers = Scene.jsx rig lights — they track the live object each
 //     frame via `name="dbg:*"`, so editing a light's position in Scene.jsx
 //     moves the marker immediately
-const DEBUG_COORDS = true
+const DEBUG_COORDS = false
 
 // Live tracker: positions the marker on an object found by name every frame.
 // Use for anything defined OUTSIDE this file (Scene.jsx lights) — no stale

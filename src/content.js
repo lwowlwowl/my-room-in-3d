@@ -57,8 +57,8 @@ export const boards = {
     intro: "If you like engineering, nature, games, and food — let's connect!",
     links: [
       { k: 'Email', v: 'you@example.com', href: 'mailto:you@example.com', icon: 'mail' },
-      { k: 'GitHub', v: 'github.com/yourname', href: '#', icon: 'github' },
-      { k: 'LinkedIn', v: 'linkedin.com/in/yourname', href: '#', icon: 'linkedin' },
+      { k: 'GitHub', v: 'github.com/lwowlwowl', href: 'https://github.com/lwowlwowl', icon: 'github' },
+      { k: 'LinkedIn', v: 'linkedin.com', href: 'https://www.linkedin.com', icon: 'linkedin' },
     ],
   },
 }
