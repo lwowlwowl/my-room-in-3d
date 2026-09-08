@@ -3,8 +3,8 @@
 **English** · **[中文](README_CN.md)**
 
 <p align="center">
-  <img src="docs/day.png" alt="Day mode — the cottagecore room" width="48%" />
-  <img src="docs/night.png" alt="Night mode — lamp glow and moonlight" width="48%" />
+  <img src="docs/day.webp" alt="Day mode — the cottagecore room" width="48%" />
+  <img src="docs/night.webp" alt="Night mode — lamp glow and moonlight" width="48%" />
 </p>
 
 A cottagecore 3D room that works as an interactive resume. Orbit the diorama, click the signpost boards, the computer screen, or the stump-cabinet drawer to explore the content. Toggle day/night and the whole scene crossfades between two lighting rigs — at night the desk lamp and stump orb throw real shadows, the signpost labels glow, and a synthesized breeze + BGM ambience plays. The in-screen "CottageOS" terminal even answers `day`/`night` commands.
@@ -18,20 +18,20 @@ An open cottagecore 3D diorama you can explore — a resume disguised as a tiny 
 - **Signpost boards** (My Work / About / Contact) — GSAP camera fly-in, forest-themed modals.
 
   <p align="center">
-    <img src="docs/modal-work.png" alt="My Work — forest signpost modal" width="70%" />
+    <img src="docs/modal-work.webp" alt="My Work — forest signpost modal" width="70%" />
   </p>
 
 - **Computer screen** — lean-in dolly + FOV zoom, then a retro cream-white monitor running "CottageOS": a hello.txt terminal you can **really type into with your keyboard** — try `help`, `whoami`, `clear`, `day` and `night` (the last two flip the scene's lighting through the crossfade) — plus a click-to-plant garden toy and a music app.
 
   <p align="center">
-    <img src="docs/screen-hello.png" alt="CottageOS hello.txt terminal" width="48%" />
-    <img src="docs/screen-music.png" alt="CottageOS music app" width="48%" />
+    <img src="docs/screen-hello.webp" alt="CottageOS hello.txt terminal" width="48%" />
+    <img src="docs/screen-music.webp" alt="CottageOS music app" width="48%" />
   </p>
 
 - **Stump-cabinet drawer** — pulls out a wooden drawer with hobbies, keepsakes, and skill badges.
 
   <p align="center">
-    <img src="docs/drawer-collection.png" alt="My Collection — stump drawer" width="70%" />
+    <img src="docs/drawer-collection.webp" alt="My Collection — stump drawer" width="70%" />
   </p>
 
 - **Day/night toggle** — the desk lamp easter egg or the top-right plank. The whole scene **crossfades** between the two lighting rigs (~1.6s): every light, background, fog, glowing signpost text, and the lamp bulb fade together. At night the lamp and the stump's glass orb cast real directional shadows.

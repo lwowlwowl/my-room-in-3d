@@ -3,8 +3,8 @@
 **[English](README.md)** · **中文**
 
 <p align="center">
-  <img src="docs/day.png" alt="白天模式 — 田园风小屋" width="48%" />
-  <img src="docs/night.png" alt="夜晚模式 — 灯光与月光" width="48%" />
+  <img src="docs/day.webp" alt="白天模式 — 田园风小屋" width="48%" />
+  <img src="docs/night.webp" alt="夜晚模式 — 灯光与月光" width="48%" />
 </p>
 
 一个田园风（cottagecore）3D 房间，也是一份交互式简历。环绕游览小屋，点击路牌板子、电脑屏幕或树桩柜抽屉来探索内容。切换日/夜，整个场景会在两套灯光组之间交叉淡化 — 夜晚台灯和树桩玻璃球投出真实影子，路牌文字发光，还有合成微风 + BGM 氛围音。屏幕里的 "CottageOS" 终端甚至能听懂`day`/`night` 命令。
@@ -18,20 +18,20 @@
 - **路牌板子**（My Work / About / Contact）— GSAP 镜头飞入，森林风模态框
   
   <p align="center">
-    <img src="docs/modal-work.png" alt="My Work — 森林木牌弹窗" width="70%" />
+    <img src="docs/modal-work.webp" alt="My Work — 森林木牌弹窗" width="70%" />
   </p>
   
 - **电脑屏幕** — 推轨 + FOV 镜头推近，白色复古显示器里运行 "CottageOS"：可以**用真实键盘打字**的 hello.txt 终端 — 试试 `help`、`whoami`、`clear`、`day`、`night`（后两个会直接触发场景日夜交叉淡化）— 还有点击种花小玩具和音乐播放器。
   
   <p align="center">
-    <img src="docs/screen-hello.png" alt="CottageOS hello.txt 终端" width="48%" />
-    <img src="docs/screen-music.png" alt="CottageOS 音乐 app" width="48%" />
+    <img src="docs/screen-hello.webp" alt="CottageOS hello.txt 终端" width="48%" />
+    <img src="docs/screen-music.webp" alt="CottageOS 音乐 app" width="48%" />
   </p>
   
 - **树桩柜抽屉** — 拉出木质抽屉，展示爱好、收藏品、技能徽章。
 
   <p align="center">
-    <img src="docs/drawer-collection.png" alt="My Collection — 树桩抽屉" width="70%" />
+    <img src="docs/drawer-collection.webp" alt="My Collection — 树桩抽屉" width="70%" />
   </p>
 
 - **日/夜切换** — 台灯彩蛋或右上角木牌。整个场景在两套灯光组之间**交叉淡化**（约 1.6 秒）：所有灯光、背景、雾、路牌发光文字、灯泡光晕一起渐变。夜晚台灯和树桩玻璃球投出真实方向影子。
