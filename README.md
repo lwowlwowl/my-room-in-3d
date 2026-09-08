@@ -9,7 +9,7 @@
 
 A cottagecore 3D room that works as an interactive resume. Orbit the diorama, click the signpost boards, the computer screen, or the stump-cabinet drawer to explore the content. Toggle day/night and the whole scene crossfades between two lighting rigs — at night the desk lamp and stump orb throw real shadows, the signpost labels glow, and a synthesized breeze + BGM ambience plays. The in-screen "CottageOS" terminal even answers `day`/`night` commands.
 
-**Live demo:** `<!-- TODO: add live demo link here -->`
+**Live demo:** [lwowlwowl-room-folio.com](https://lwowlwowl-room-folio.com)
 
 ---
 
