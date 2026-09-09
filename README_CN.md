@@ -9,7 +9,7 @@
 
 一个田园风（cottagecore）3D 房间，也是一份交互式简历。环绕游览小屋，点击路牌板子、电脑屏幕或树桩柜抽屉来探索内容。切换日/夜，整个场景会在两套灯光组之间交叉淡化 — 夜晚台灯和树桩玻璃球投出真实影子，路牌文字发光，还有合成微风 + BGM 氛围音。屏幕里的 "CottageOS" 终端甚至能听懂`day`/`night` 命令。
 
-**在线演示：** [lwowlwowl-room-folio.com](https://lwowlwowl-room-folio.com)
+**在线演示：** <a href="https://lwowlwowl-room-folio.com" target="_blank" rel="noopener noreferrer">lwowlwowl-room-folio.com</a>
 
 ---
 
